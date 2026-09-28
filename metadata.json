@@ -1,0 +1,6 @@
+{
+  "name": "CocoonMail — Customer Engagement & Commerce Platform",
+  "description": "Engage customers across Email and WhatsApp, automate conversations with AI, turn interactions into purchases, and measure the entire customer journey from one powerful platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
