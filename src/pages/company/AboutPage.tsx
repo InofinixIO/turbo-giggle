@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Sparkles, ArrowRight, ShieldCheck, Heart, Users, Target, Globe, Zap } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 

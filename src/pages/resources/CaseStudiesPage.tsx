@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { TrendingUp, ArrowRight, CheckCircle2, ChevronRight, BarChart3, Building } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 

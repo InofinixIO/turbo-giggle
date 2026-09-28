@@ -33,7 +33,7 @@ import {
   FileCode2,
   Terminal
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 import { PlatformPageId } from './PlatformNavSwitcher';
 
 interface NavbarProps {

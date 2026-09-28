@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { FileText, ArrowRight, ShieldCheck, Download, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { SEOHead } from '../../components/SEOHead';
 

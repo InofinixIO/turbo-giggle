@@ -9,8 +9,6 @@ import {
   ShoppingBag, 
   CreditCard, 
   TrendingUp, 
-  Instagram, 
-  Facebook, 
   ChevronRight, 
   Check, 
   DollarSign, 
@@ -19,6 +17,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { PlatformPageId } from '../components/PlatformNavSwitcher';
+import { InstagramIcon, FacebookIcon } from '../components/BrandIcons';
 
 interface AdsPageProps {
   onOpenStartFree: () => void;
@@ -121,7 +120,10 @@ export const AdsPage: React.FC<AdsPageProps> = ({
                   {adStep === 1 && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                        <span className="flex items-center gap-1"><Instagram className="w-3.5 h-3.5 text-pink-600" /> Instagram Feed Sponsored Ad</span>
+                        <span className="flex items-center gap-1.5">
+                          <InstagramIcon size={14} color="#e11d48" />
+                          Instagram Feed Sponsored Ad
+                        </span>
                         <span>Step 1: Ad Impression</span>
                       </div>
                       <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-sm max-w-sm mx-auto">
