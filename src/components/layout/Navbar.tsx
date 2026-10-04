@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
               className="flex items-center focus:outline-none"
             >
               <img 
-                src="https://cocoonmail.com/images/logo/logo-2.svg" 
+                src="https://cdn.cocoonmail.com/assets/logo-2.svg" 
                 alt="Cocoonmail" 
                 className="h-8 w-auto" 
               />

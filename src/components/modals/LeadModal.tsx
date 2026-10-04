@@ -38,7 +38,7 @@ export const LeadModal: React.FC<LeadModalProps> = ({ type, onClose }) => {
         <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <img 
-              src="https://cocoonmail.com/images/logo/logo-2.svg" 
+              src="https://cdn.cocoonmail.com/assets/logo-2.svg" 
               alt="Cocoonmail" 
               className="h-7 w-auto" 
             />

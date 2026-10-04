@@ -85,7 +85,7 @@ export const IntegrationsSection: React.FC<IntegrationsSectionProps> = ({ onOpen
           <div className="my-8 relative z-20 flex justify-center">
             <div className="p-4 px-8 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-xl flex items-center gap-4">
               <img 
-                src="https://cocoonmail.com/images/logo/logo-2.svg" 
+                src="https://cdn.cocoonmail.com/assets/logo.svg" 
                 alt="Cocoonmail Core" 
                 className="w-8 h-8" 
               />

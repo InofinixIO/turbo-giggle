@@ -166,7 +166,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
           <div className="flex items-center gap-3">
             <a href="/" onClick={(e) => handleLink(e, '/')} aria-label="Cocoonmail Home" className="flex items-center">
               <img 
-                src="https://cocoonmail.com/images/logo/logo-2.svg" 
+                src="https://cdn.cocoonmail.com/assets/logo.svg" 
                 alt="Cocoonmail Logo" 
                 className="h-6 w-auto" 
               />
