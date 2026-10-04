@@ -15,6 +15,7 @@ import { DevelopersPage } from './pages/DevelopersPage';
 import { PricingPage } from './pages/PricingPage';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { CompanyPage } from './pages/CompanyPage';
+import { LegalPage } from './pages/LegalPage';
 import { ModalType } from './types';
 
 function AppContent() {
@@ -22,6 +23,10 @@ function AppContent() {
   const [modalType, setModalType] = useState<ModalType>(null);
 
   const handleOpenModal = (type: ModalType) => {
+    if (type === 'start-free') {
+      window.location.href = 'https://app.cocoonmail.com/signup';
+      return;
+    }
     setModalType(type);
   };
 
@@ -74,6 +79,23 @@ function AppContent() {
       const parts = currentPath.split('/');
       const slug = parts[2] || '';
       return <CompanyPage slug={slug} onOpenModal={handleOpenModal} />;
+    }
+
+    // 8. Legal & Compliance Routes
+    const legalSlugs = [
+      'refund-policy',
+      'terms-of-service',
+      'privacy-policy',
+      'cookie-policy',
+      'gdpr-compliance',
+      'data-protection'
+    ];
+    const pathSlug = currentPath.replace(/^\//, '').split('?')[0].split('#')[0];
+    if (legalSlugs.includes(pathSlug)) {
+      return <LegalPage slug={pathSlug} onOpenModal={handleOpenModal} />;
+    }
+    if (pathSlug === 'privacypolicy') {
+      return <LegalPage slug="privacy-policy" onOpenModal={handleOpenModal} />;
     }
 
     // Default Fallback

@@ -70,16 +70,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
             <a 
               href="/" 
               onClick={(e) => handleLinkClick(e, '/')}
-              className="flex items-center gap-2.5 focus:outline-none"
+              aria-label="Cocoonmail Home"
+              className="flex items-center focus:outline-none"
             >
               <img 
                 src="https://cocoonmail.com/images/logo/logo-2.svg" 
                 alt="Cocoonmail" 
                 className="h-8 w-auto" 
               />
-              <span className="text-xl font-extrabold tracking-tight text-slate-900">
-                Cocoon<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">mail</span>
-              </span>
             </a>
 
             {/* Desktop Navigation Links with Separate Slugs */}
@@ -424,7 +422,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
           </div>
 
           {/* Right Action Zone */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
+            <a
+              href="https://app.cocoonmail.com/login"
+              className="text-xs font-semibold text-slate-700 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Sign In
+            </a>
+
             <button
               onClick={() => onOpenModal('book-demo')}
               className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 transition-colors"
@@ -442,6 +447,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
 
           {/* Mobile Hamburger Toggle */}
           <div className="flex lg:hidden items-center gap-2">
+            <a
+              href="https://app.cocoonmail.com/login"
+              className="text-xs font-semibold text-slate-700 hover:text-blue-600 px-2 py-1"
+            >
+              Sign In
+            </a>
             <button
               onClick={() => onOpenModal('start-free')}
               className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg shadow-sm"
@@ -514,19 +525,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
             </a>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => { setMobileMenuOpen(false); onOpenModal('book-demo'); }}
-              className="w-full py-2.5 px-3 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl text-center"
+          <div className="pt-3 border-t border-slate-100 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { setMobileMenuOpen(false); onOpenModal('book-demo'); }}
+                className="w-full py-2.5 px-3 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl text-center"
+              >
+                Book a Demo
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); onOpenModal('start-free'); }}
+                className="w-full py-2.5 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl text-center"
+              >
+                Start Free
+              </button>
+            </div>
+            <a
+              href="https://app.cocoonmail.com/login"
+              className="block w-full py-2 px-3 text-xs font-semibold text-slate-600 text-center hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors"
             >
-              Book a Demo
-            </button>
-            <button
-              onClick={() => { setMobileMenuOpen(false); onOpenModal('start-free'); }}
-              className="w-full py-2.5 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl text-center"
-            >
-              Start Free
-            </button>
+              Already have an account? Sign In →
+            </a>
           </div>
         </div>
       )}

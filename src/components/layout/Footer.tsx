@@ -1,12 +1,13 @@
 import React from 'react';
 import { 
-  Mail, 
-  MessageSquare, 
   ArrowRight, 
   ExternalLink, 
   ShieldCheck, 
-  Globe, 
-  CheckCircle2 
+  Lock,
+  RotateCcw,
+  FileText,
+  Cookie,
+  CheckCircle2
 } from 'lucide-react';
 import { ModalType } from '../../types';
 import { useRouter } from '../../router/RouterContext';
@@ -22,6 +23,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
     e.preventDefault();
     navigate(path);
   };
+
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-slate-950 text-slate-400 text-xs border-t border-slate-900 pt-16 pb-12">
@@ -42,9 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <li><a href="/platform/segmentation" onClick={(e) => handleLink(e, '/platform/segmentation')} className="hover:text-white transition-colors">Segmentation</a></li>
               <li><a href="/platform/templates" onClick={(e) => handleLink(e, '/platform/templates')} className="hover:text-white transition-colors">Templates & Sandbox</a></li>
               <li><a href="/platform/ads" onClick={(e) => handleLink(e, '/platform/ads')} className="hover:text-white transition-colors">Meta Ads to WhatsApp</a></li>
-              <li><a href="/platform/catalog" onClick={(e) => handleLink(e, '/platform/catalog')} className="hover:text-white transition-colors">Product Catalog</a></li>
               <li><a href="/platform/payments" onClick={(e) => handleLink(e, '/platform/payments')} className="hover:text-white transition-colors">In-Chat Payments</a></li>
-              <li><a href="/platform/analytics" onClick={(e) => handleLink(e, '/platform/analytics')} className="hover:text-white transition-colors">Analytics</a></li>
             </ul>
           </div>
 
@@ -69,20 +70,54 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <li><a href="/developers/api" onClick={(e) => handleLink(e, '/developers/api')} className="hover:text-white transition-colors">REST API Reference</a></li>
               <li><a href="/developers/webhooks" onClick={(e) => handleLink(e, '/developers/webhooks')} className="hover:text-white transition-colors">Webhooks Stream</a></li>
               <li><a href="https://kb.cocoonmail.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1">Documentation <ExternalLink className="w-3 h-3" /></a></li>
-              <li><a href="/developers/integrations" onClick={(e) => handleLink(e, '/developers/integrations')} className="hover:text-white transition-colors">Integrations</a></li>
-              <li><a href="/developers" onClick={(e) => handleLink(e, '/developers')} className="hover:text-white transition-colors">Developer Hub</a></li>
+              <li><a href="/developers/integrations" onClick={(e) => handleLink(e, '/developers/integrations')} className="hover:text-white transition-colors">Integrations Hub</a></li>
+              <li><a href="/pricing" onClick={(e) => handleLink(e, '/pricing')} className="hover:text-white transition-colors">Pricing & Volume</a></li>
             </ul>
           </div>
 
-          {/* Column 4: Resources */}
+          {/* Column 4: Legal & Compliance */}
           <div className="space-y-3">
-            <div className="text-white font-bold text-xs uppercase tracking-wider">Resources</div>
+            <div className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+              <span>Legal & Policy</span>
+            </div>
             <ul className="space-y-2">
-              <li><a href="/resources/guides" onClick={(e) => handleLink(e, '/resources/guides')} className="hover:text-white transition-colors">Growth Guides</a></li>
-              <li><a href="/resources/templates" onClick={(e) => handleLink(e, '/resources/templates')} className="hover:text-white transition-colors">Template Sandbox</a></li>
-              <li><a href="/resources/case-studies" onClick={(e) => handleLink(e, '/resources/case-studies')} className="hover:text-white transition-colors">Case Studies</a></li>
-              <li><a href="/pricing" onClick={(e) => handleLink(e, '/pricing')} className="hover:text-white transition-colors">ROI Calculator</a></li>
-              <li><a href="https://kb.cocoonmail.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Help Center</a></li>
+              <li>
+                <a href="/terms-of-service" onClick={(e) => handleLink(e, '/terms-of-service')} className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <FileText className="w-3 h-3 text-slate-500" />
+                  <span>Terms of Service</span>
+                </a>
+              </li>
+              <li>
+                <a href="/privacy-policy" onClick={(e) => handleLink(e, '/privacy-policy')} className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <ShieldCheck className="w-3 h-3 text-slate-500" />
+                  <span>Privacy Policy</span>
+                </a>
+              </li>
+              <li>
+                <a href="/refund-policy" onClick={(e) => handleLink(e, '/refund-policy')} className="hover:text-white transition-colors flex items-center gap-1.5 text-blue-400 font-medium">
+                  <RotateCcw className="w-3 h-3 text-blue-400" />
+                  <span>Refund Policy</span>
+                </a>
+              </li>
+              <li>
+                <a href="/cookie-policy" onClick={(e) => handleLink(e, '/cookie-policy')} className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <Cookie className="w-3 h-3 text-slate-500" />
+                  <span>Cookie Policy</span>
+                </a>
+              </li>
+              <li>
+                <a href="/gdpr-compliance" onClick={(e) => handleLink(e, '/gdpr-compliance')} className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-slate-500" />
+                  <span>GDPR Compliance</span>
+                </a>
+              </li>
+              <li>
+                <a href="/data-protection" onClick={(e) => handleLink(e, '/data-protection')} className="hover:text-white transition-colors flex items-center gap-1.5">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Data Protection</span>
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -92,8 +127,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
             <ul className="space-y-2">
               <li><a href="/company/about" onClick={(e) => handleLink(e, '/company/about')} className="hover:text-white transition-colors">About Cocoonmail</a></li>
               <li><a href="/company/contact" onClick={(e) => handleLink(e, '/company/contact')} className="hover:text-white transition-colors">Contact Sales</a></li>
+              <li><a href="/resources/guides" onClick={(e) => handleLink(e, '/resources/guides')} className="hover:text-white transition-colors">Growth Guides</a></li>
               <li><span className="text-slate-600">Careers (Hiring)</span></li>
-              <li><span className="text-slate-600">Meta Partner Status</span></li>
               <li><span className="text-emerald-400 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Systems Operational</span></li>
             </ul>
           </div>
@@ -111,35 +146,50 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <span>Start Free</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
-            <div className="text-[10px] text-slate-500">
-              No credit card required. Instant account setup.
+            <div className="pt-2 border-t border-slate-900 flex flex-col gap-1.5">
+              <a
+                href="https://app.cocoonmail.com/login"
+                className="text-slate-400 hover:text-white text-center font-medium transition-colors"
+              >
+                Already registered? <span className="text-blue-400 underline">Sign In</span>
+              </a>
+              <span className="text-[10px] text-slate-500 text-center">
+                No credit card required. Instant activation.
+              </span>
             </div>
           </div>
 
         </div>
 
-        {/* Bottom Bar: Wordmark, Legal & Copyright */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Bottom Bar: Wordmark, Legal Links & Exact Copyright */}
+        <div className="pt-8 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <a href="/" onClick={(e) => handleLink(e, '/')} className="flex items-center gap-2">
+            <a href="/" onClick={(e) => handleLink(e, '/')} aria-label="Cocoonmail Home" className="flex items-center">
               <img 
                 src="https://cocoonmail.com/images/logo/logo-2.svg" 
                 alt="Cocoonmail Logo" 
                 className="h-6 w-auto" 
               />
-              <span className="text-sm font-bold text-white tracking-tight">Cocoonmail</span>
             </a>
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-700">|</span>
             <span className="text-[11px] text-slate-500">
               Customer Engagement & Commerce Operating Platform
             </span>
           </div>
 
-          <div className="flex items-center gap-6 text-[11px] text-slate-500">
-            <span>© {new Date().getFullYear()} Cocoonmail Technologies Inc. All rights reserved.</span>
-            <a href="/company/about" onClick={(e) => handleLink(e, '/company/about')} className="hover:text-slate-300">Privacy Policy</a>
-            <a href="/company/about" onClick={(e) => handleLink(e, '/company/about')} className="hover:text-slate-300">Terms of Service</a>
-            <a href="/company/about" onClick={(e) => handleLink(e, '/company/about')} className="hover:text-slate-300">Security & GDPR</a>
+          {/* Legal Quick Links in Bottom Sub-bar */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
+            <a href="/terms-of-service" onClick={(e) => handleLink(e, '/terms-of-service')} className="hover:text-slate-300 transition-colors">Terms of Service</a>
+            <a href="/privacy-policy" onClick={(e) => handleLink(e, '/privacy-policy')} className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+            <a href="/refund-policy" onClick={(e) => handleLink(e, '/refund-policy')} className="hover:text-slate-300 transition-colors text-slate-400">Refund Policy</a>
+            <a href="/cookie-policy" onClick={(e) => handleLink(e, '/cookie-policy')} className="hover:text-slate-300 transition-colors">Cookie Policy</a>
+            <a href="/gdpr-compliance" onClick={(e) => handleLink(e, '/gdpr-compliance')} className="hover:text-slate-300 transition-colors">GDPR Compliance</a>
+            <a href="/data-protection" onClick={(e) => handleLink(e, '/data-protection')} className="hover:text-slate-300 transition-colors">Data Protection</a>
+          </div>
+
+          {/* Exact Required Copyright Notice */}
+          <div className="text-[11px] text-slate-500 text-center lg:text-right">
+            Copyright © {currentYear} Cocoonmail, Inofinix Private Limited, All Rights Reserved
           </div>
         </div>
 
