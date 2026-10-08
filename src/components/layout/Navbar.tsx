@@ -231,26 +231,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
                       </div>
                     </div>
 
-                    {/* Featured Item */}
-                    <div className="bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-4 rounded-xl border border-blue-100 flex flex-col justify-between">
+                    {/* Featured Item: WhatsApp Commerce */}
+                    <div className="bg-gradient-to-br from-emerald-500/15 via-blue-500/10 to-indigo-500/5 p-4 rounded-xl border border-emerald-200/80 flex flex-col justify-between">
                       <div>
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-600 text-white mb-2">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white mb-2">
                           <Sparkles className="w-3 h-3" />
-                          <span>Connected Flow</span>
+                          <span>NEW · Commerce Journey</span>
                         </div>
-                        <h4 className="text-xs font-bold text-slate-900 mb-1">
-                          Campaign to Conversion
+                        <h4 className="text-xs font-extrabold text-slate-900 mb-1">
+                          WhatsApp Conversational Commerce
                         </h4>
                         <p className="text-[11px] text-slate-600 leading-relaxed">
-                          See how dynamic audience segments flow directly into Email, WhatsApp, AI catalog recommendations, and instant payment loops.
+                          From Ad to Payment — All in One Journey. Sync Meta catalogs, automate order templates, and collect UPI payments inside chat.
                         </p>
                       </div>
                       <a
-                        href="/#interactive-journey"
-                        onClick={(e) => handleLinkClick(e, '/#interactive-journey')}
-                        className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 group"
+                        href="/platform/commerce"
+                        onClick={(e) => handleLinkClick(e, '/platform/commerce')}
+                        className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 group"
                       >
-                        <span>Interactive 8-Step Journey</span>
+                        <span>Explore Commerce Journey</span>
                         <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                       </a>
                     </div>
@@ -483,6 +483,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
             <a href="/platform/whatsapp" onClick={(e) => handleLinkClick(e, '/platform/whatsapp')} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-800 rounded-lg hover:bg-slate-50 flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-emerald-600" />
               <span>WhatsApp Business API</span>
+            </a>
+            <a href="/platform/commerce" onClick={(e) => handleLinkClick(e, '/platform/commerce')} className="w-full text-left px-3 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50/60 rounded-lg hover:bg-emerald-100/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-emerald-600" />
+                <span>WhatsApp Commerce</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-1.5 py-0.5 rounded">NEW</span>
             </a>
             <a href="/platform/ai-agents" onClick={(e) => handleLinkClick(e, '/platform/ai-agents')} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-800 rounded-lg hover:bg-slate-50 flex items-center gap-2">
               <Bot className="w-4 h-4 text-violet-600" />

@@ -16,6 +16,7 @@ import { PricingPage } from './pages/PricingPage';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { CompanyPage } from './pages/CompanyPage';
 import { LegalPage } from './pages/LegalPage';
+import { WhatsAppCommercePage } from './pages/WhatsAppCommercePage';
 import { ModalType } from './types';
 
 function AppContent() {
@@ -41,7 +42,12 @@ function AppContent() {
       return <HomePage onOpenModal={handleOpenModal} />;
     }
 
-    // 2. Platform Routes: /platform or /platform/:slug
+    // 2. Commerce Route: /platform/commerce or /commerce
+    if (currentPath === '/commerce' || currentPath.startsWith('/platform/commerce')) {
+      return <WhatsAppCommercePage onOpenModal={handleOpenModal} />;
+    }
+
+    // 2b. Platform Routes: /platform or /platform/:slug
     if (currentPath.startsWith('/platform')) {
       const parts = currentPath.split('/');
       const slug = parts[2] || '';

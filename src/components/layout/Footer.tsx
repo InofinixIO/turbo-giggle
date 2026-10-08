@@ -40,6 +40,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <li><a href="/platform/email" onClick={(e) => handleLink(e, '/platform/email')} className="hover:text-white transition-colors">Email Marketing</a></li>
               <li><a href="/platform/transactional-email" onClick={(e) => handleLink(e, '/platform/transactional-email')} className="hover:text-white transition-colors">Transactional Email</a></li>
               <li><a href="/platform/whatsapp" onClick={(e) => handleLink(e, '/platform/whatsapp')} className="hover:text-white transition-colors">WhatsApp Business API</a></li>
+              <li><a href="/platform/commerce" onClick={(e) => handleLink(e, '/platform/commerce')} className="text-emerald-400 font-semibold hover:text-white transition-colors flex items-center gap-1"><span>WhatsApp Commerce</span><span className="text-[9px] uppercase px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded">New</span></a></li>
               <li><a href="/platform/ai-agents" onClick={(e) => handleLink(e, '/platform/ai-agents')} className="hover:text-white transition-colors">AI Agents</a></li>
               <li><a href="/platform/automation" onClick={(e) => handleLink(e, '/platform/automation')} className="hover:text-white transition-colors">Visual Automation</a></li>
               <li><a href="/platform/segmentation" onClick={(e) => handleLink(e, '/platform/segmentation')} className="hover:text-white transition-colors">Segmentation</a></li>
