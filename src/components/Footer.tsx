@@ -143,6 +143,7 @@ export const Footer: React.FC<FooterProps> = ({
             <ul className="space-y-2 text-slate-400 text-xs">
               <li><button onClick={() => navigate('/about')} className="hover:text-white transition-colors cursor-pointer text-left">About Us</button></li>
               <li><button onClick={() => navigate('/pricing')} className="hover:text-white transition-colors cursor-pointer text-left">Pricing</button></li>
+              <li><button onClick={() => navigate('/pricing-1')} className="hover:text-white text-violet-400 transition-colors cursor-pointer text-left flex items-center gap-1.5"><span>Pricing 1</span><span className="text-[9px] uppercase px-1 py-0.2 bg-violet-500/20 text-violet-300 rounded font-semibold">New</span></button></li>
               <li><button onClick={() => navigate('/contact')} className="hover:text-white transition-colors cursor-pointer text-left">Contact Us</button></li>
               <li><button onClick={() => navigate('/careers')} className="hover:text-white transition-colors cursor-pointer text-left">Careers (Hiring)</button></li>
               <li><button onClick={() => navigate('/security')} className="hover:text-white transition-colors cursor-pointer text-left">Security &amp; Trust</button></li>

@@ -73,6 +73,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <li><a href="https://kb.cocoonmail.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1">Documentation <ExternalLink className="w-3 h-3" /></a></li>
               <li><a href="/developers/integrations" onClick={(e) => handleLink(e, '/developers/integrations')} className="hover:text-white transition-colors">Integrations Hub</a></li>
               <li><a href="/pricing" onClick={(e) => handleLink(e, '/pricing')} className="hover:text-white transition-colors">Pricing & Volume</a></li>
+              <li><a href="/pricing-1" onClick={(e) => handleLink(e, '/pricing-1')} className="text-violet-400 font-medium hover:text-white transition-colors flex items-center gap-1"><span>Pricing 1</span><span className="text-[9px] uppercase px-1 py-0.2 bg-violet-500/20 text-violet-300 rounded">New</span></a></li>
             </ul>
           </div>
 

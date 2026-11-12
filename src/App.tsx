@@ -13,6 +13,7 @@ import { PlatformPage } from './pages/PlatformPage';
 import { SolutionsPage } from './pages/SolutionsPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { PricingPage } from './pages/PricingPage';
+import { Pricing1Page } from './pages/Pricing1Page';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { CompanyPage } from './pages/CompanyPage';
 import { LegalPage } from './pages/LegalPage';
@@ -68,7 +69,10 @@ function AppContent() {
       return <DevelopersPage slug={slug} onOpenModal={handleOpenModal} />;
     }
 
-    // 5. Pricing Route: /pricing
+    // 5. Pricing Route: /pricing & /pricing-1
+    if (currentPath === '/pricing-1') {
+      return <Pricing1Page onOpenModal={handleOpenModal} />;
+    }
     if (currentPath === '/pricing') {
       return <PricingPage onOpenModal={handleOpenModal} />;
     }

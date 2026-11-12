@@ -19,6 +19,8 @@ export type SolutionId =
   | 'education'
   | 'real-estate';
 
+export type ModalType = 'start-free' | 'book-demo' | null;
+
 export interface JourneyStep {
   id: string;
   stepNumber: number;
