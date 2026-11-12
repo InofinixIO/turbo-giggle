@@ -10,10 +10,9 @@ import {
   Zap, 
   Percent,
   Link as LinkIcon,
-  Copy,
   CheckCircle2,
-  Calendar,
-  Share2
+  Share2,
+  Globe
 } from 'lucide-react';
 import { ModalType } from '../types';
 import { useRouter } from '../router/RouterContext';
@@ -25,6 +24,7 @@ interface Pricing1PageProps {
 type PlanId = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise';
 type CalcPlanId = 'free' | 'starter' | 'growth' | 'pro';
 type BillingInterval = 'monthly' | 'quarterly' | 'yearly';
+type Currency = 'USD' | 'INR';
 
 interface PlanDef {
   id: PlanId;
@@ -38,6 +38,30 @@ interface PlanDef {
 export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const { navigate } = useRouter();
 
+  // Currency state - default auto-detects non-Indian users as USD
+  const [currency, setCurrency] = useState<Currency>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const currParam = params.get('currency')?.toUpperCase();
+        if (currParam === 'USD' || currParam === 'INR') {
+          return currParam as Currency;
+        }
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        if (tz.toLowerCase().includes('kolkata') || tz.toLowerCase().includes('calcutta') || tz.toLowerCase().includes('india')) {
+          return 'INR';
+        }
+        const lang = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+        if (lang.toLowerCase().includes('in')) {
+          return 'INR';
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return 'USD';
+  });
+
   // State
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
   const [selectedCalcPlan, setSelectedCalcPlan] = useState<CalcPlanId>('growth');
@@ -48,19 +72,32 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const [copiedPlanId, setCopiedPlanId] = useState<PlanId | 'all' | null>(null);
   const [highlightedPlan, setHighlightedPlan] = useState<PlanId | null>(null);
 
-  // Constants & Rates
+  // Discounts
   const quarterlyDiscount = 0.05; // 5% off
   const yearlyDiscount = 0.10;    // 10% off
-  const waMarketingRate = 0.98;   // 98 paisa per message
-  const waUtilityRate = 0.25;     // 25 paisa per message
 
-  const monthlyPrices: Record<PlanId, number> = {
+  // Rates in INR & USD
+  const waMarketingRate = currency === 'USD' ? 0.012 : 0.98;   // $0.012 vs 98 paisa
+  const waUtilityRate = currency === 'USD' ? 0.003 : 0.25;     // $0.003 vs 25 paisa
+
+  // Base monthly platform prices
+  const monthlyPricesINR: Record<PlanId, number> = {
     free: 0,
     starter: 1499,
     growth: 3999,
     pro: 7999,
     enterprise: 0,
   };
+
+  const monthlyPricesUSD: Record<PlanId, number> = {
+    free: 0,
+    starter: 45,
+    growth: 99,
+    pro: 299,
+    enterprise: 0,
+  };
+
+  const monthlyPrices = currency === 'USD' ? monthlyPricesUSD : monthlyPricesINR;
 
   // Included volume specs
   const includedEmailsMap: Record<CalcPlanId, number> = {
@@ -71,9 +108,21 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   };
 
   // Helper formatters
-  const inr = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN');
-  const inr2 = (n: number) => '₹' + n.toFixed(2);
-  const num = (n: number) => n.toLocaleString('en-IN');
+  const money = (n: number) => {
+    if (currency === 'USD') {
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  };
+
+  const moneyDec = (n: number) => {
+    if (currency === 'USD') {
+      return '$' + n.toFixed(3);
+    }
+    return '₹' + n.toFixed(2);
+  };
+
+  const num = (n: number) => n.toLocaleString(currency === 'USD' ? 'en-US' : 'en-IN');
 
   const getPlanFee = (id: PlanId) => {
     const base = monthlyPrices[id];
@@ -91,21 +140,27 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     if (id === 'enterprise') return 'Volume-based pricing';
     if (id === 'free') return 'Free forever';
     const fee = getPlanFee(id);
+    const taxSuffix = currency === 'INR' ? ' + GST' : '';
     if (billingInterval === 'yearly') {
-      return `per month, billed yearly (${inr(fee * 12)}) + GST`;
+      return `per month, billed yearly (${money(fee * 12)})${taxSuffix}`;
     }
     if (billingInterval === 'quarterly') {
-      return `per month, billed quarterly (${inr(fee * 3)}) + GST`;
+      return `per month, billed quarterly (${money(fee * 3)})${taxSuffix}`;
     }
-    return 'per month + GST';
+    return `per month${taxSuffix}`;
   };
 
-  // Handle URL deep linking (e.g. ?plan=growth&billing=quarterly)
+  // Handle URL deep linking (e.g. ?plan=growth&billing=quarterly&currency=USD)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get('plan') as PlanId | null;
       const billingParam = params.get('billing') as BillingInterval | null;
+      const currParam = params.get('currency')?.toUpperCase() as Currency | null;
+
+      if (currParam && (currParam === 'USD' || currParam === 'INR')) {
+        setCurrency(currParam);
+      }
 
       if (billingParam && ['monthly', 'quarterly', 'yearly'].includes(billingParam)) {
         setBillingInterval(billingParam);
@@ -124,7 +179,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
           }
         }, 300);
       }
-    } catch (e) {
+    } catch {
       // Ignore if window is not available
     }
   }, []);
@@ -136,6 +191,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
       const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('plan', planId);
       url.searchParams.set('billing', billingInterval);
+      url.searchParams.set('currency', currency);
       navigator.clipboard.writeText(url.toString()).then(() => {
         setCopiedPlanId(planId);
         setTimeout(() => {
@@ -156,7 +212,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
       cta: 'Start free',
       features: [
         '500 emails/month included',
-        '₹50 WhatsApp credit on sign-up',
+        currency === 'USD' ? '$1 WhatsApp credit on sign-up' : '₹50 WhatsApp credit on sign-up',
         '500 contacts',
         '1 user',
         'Email & WhatsApp campaigns',
@@ -171,7 +227,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
       cta: 'Choose Starter',
       features: [
         '1,000 emails/month included',
-        '₹100 WhatsApp credit/month',
+        currency === 'USD' ? '$2 WhatsApp credit/month' : '₹100 WhatsApp credit/month',
         '2,500 contacts',
         '1 user',
         'Everything in Free',
@@ -233,7 +289,11 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   // Calculator calculations
   const incEmails = includedEmailsMap[selectedCalcPlan];
   const billableEmails = Math.max(0, emails - incEmails);
-  const emailTierRate = billableEmails <= 10000 ? 0.12 : billableEmails <= 50000 ? 0.10 : billableEmails <= 100000 ? 0.08 : 0.06;
+
+  // Email tier rates
+  const emailTierRate = currency === 'USD'
+    ? (billableEmails <= 10000 ? 0.0015 : billableEmails <= 50000 ? 0.0012 : billableEmails <= 100000 ? 0.0010 : 0.00076)
+    : (billableEmails <= 10000 ? 0.12 : billableEmails <= 50000 ? 0.10 : billableEmails <= 100000 ? 0.08 : 0.06);
 
   const platformCost = getPlanFee(selectedCalcPlan);
   const emailCost = billableEmails * emailTierRate;
@@ -246,34 +306,34 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   let waAllowanceText = '';
 
   if (selectedCalcPlan === 'growth') {
-    // 500 WhatsApp messages included: covers up to 500 marketing messages (or utility)
     const coveredMkt = Math.min(mkt, 500);
     const remainingAfterMkt = 500 - coveredMkt;
     const coveredUtil = Math.min(util, remainingAfterMkt);
     waIncludedValue = Math.min((coveredMkt * waMarketingRate) + (coveredUtil * waUtilityRate), totalWaCost);
     waAllowanceText = '500 messages included';
   } else if (selectedCalcPlan === 'pro') {
-    // 1,000 WhatsApp messages included: covers up to 1000 marketing messages (or utility)
     const coveredMkt = Math.min(mkt, 1000);
     const remainingAfterMkt = 1000 - coveredMkt;
     const coveredUtil = Math.min(util, remainingAfterMkt);
     waIncludedValue = Math.min((coveredMkt * waMarketingRate) + (coveredUtil * waUtilityRate), totalWaCost);
     waAllowanceText = '1,000 messages included';
   } else if (selectedCalcPlan === 'starter') {
-    waIncludedValue = Math.min(100, totalWaCost);
-    waAllowanceText = '₹100 credit';
+    const starterCredit = currency === 'USD' ? 2 : 100;
+    waIncludedValue = Math.min(starterCredit, totalWaCost);
+    waAllowanceText = currency === 'USD' ? '$2 credit' : '₹100 credit';
   } else {
     waIncludedValue = 0;
-    waAllowanceText = '₹0';
+    waAllowanceText = currency === 'USD' ? '$0' : '₹0';
   }
 
   const subtotal = platformCost + emailCost + mktCost + utilCost - waIncludedValue;
-  const gst = subtotal * 0.18;
-  const grandTotal = subtotal + gst;
+  const taxRate = currency === 'INR' ? 0.18 : 0; // 18% GST for INR, $0 local tax preview for USD
+  const taxAmount = subtotal * taxRate;
+  const grandTotal = subtotal + taxAmount;
 
   const calcEmailRateLabel = billableEmails === 0 
     ? `within included ${num(incEmails)}` 
-    : `${num(billableEmails)} extra at ${inr2(emailTierRate)}`;
+    : `${num(billableEmails)} extra at ${moneyDec(emailTierRate)}`;
 
   // FAQs
   const faqs = [
@@ -283,11 +343,11 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     },
     {
       question: 'Why is WhatsApp billed separately?',
-      answer: 'Meta charges for every delivered WhatsApp message at official direct rates (98p for Marketing, 25p for Utility/Authentication/Service). Growth includes 500 WhatsApp messages/mo and Pro includes 1,000 messages/mo. Any extra volume draws transparently from your prepaid wallet.'
+      answer: `Meta charges for every delivered WhatsApp message at official direct rates (${currency === 'USD' ? '$0.012 for Marketing, $0.003 for Utility/Auth' : '98p for Marketing, 25p for Utility/Authentication/Service'}). Growth includes 500 WhatsApp messages/mo and Pro includes 1,000 messages/mo. Any extra volume draws transparently from your prepaid wallet.`
     },
     {
       question: 'How do the quarterly and yearly discounts work?',
-      answer: 'Quarterly billing saves you 5% every 3 months. Yearly billing saves you 10% annually. You can change your billing interval at any time.'
+      answer: 'Quarterly billing saves you 5% every 3 months. Yearly billing saves you 10% annually. You can switch between billing intervals at any time.'
     },
     {
       question: 'Do email credits expire?',
@@ -298,12 +358,14 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
       answer: 'WhatsApp sending pauses until you recharge. Email and the rest of the platform keep working uninterrupted.'
     },
     {
-      question: 'Can I change plans later?',
+      question: 'Can I change plans or currency later?',
       answer: 'Yes. Upgrades and downgrades are pro-rated, and your purchased credits and wallet balance carry over.'
     },
     {
-      question: 'Are prices inclusive of GST?',
-      answer: 'No. All prices are in INR, and 18% GST is added at checkout.'
+      question: currency === 'INR' ? 'Are prices inclusive of GST?' : 'Are taxes included?',
+      answer: currency === 'INR' 
+        ? 'No. All INR prices are exclusive of 18% GST, which is calculated at checkout.' 
+        : 'Prices in USD are exclusive of applicable local jurisdiction taxes, calculated at checkout based on your billing address.'
     }
   ];
 
@@ -339,13 +401,38 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             <button onClick={() => scrollToSection('compare')} className="text-zinc-600 hover:text-zinc-900 transition-colors shrink-0 cursor-pointer">Full Comparison</button>
             <button onClick={() => scrollToSection('faq')} className="text-zinc-600 hover:text-zinc-900 transition-colors shrink-0 cursor-pointer">FAQ</button>
           </div>
-          <button 
-            onClick={() => onOpenModal('start-free')}
-            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 bg-violet-700 hover:bg-violet-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 shadow-xs"
-          >
-            <span>Start Free</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Currency toggle in subnav */}
+            <div className="flex items-center p-0.5 bg-zinc-100 border border-zinc-200 rounded-lg text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setCurrency('USD')}
+                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                  currency === 'USD' ? 'bg-white text-violet-700 shadow-xs' : 'text-zinc-500 hover:text-zinc-800'
+                }`}
+              >
+                USD ($)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency('INR')}
+                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+                  currency === 'INR' ? 'bg-white text-violet-700 shadow-xs' : 'text-zinc-500 hover:text-zinc-800'
+                }`}
+              >
+                INR (₹)
+              </button>
+            </div>
+
+            <button 
+              onClick={() => onOpenModal('start-free')}
+              className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 bg-violet-700 hover:bg-violet-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 shadow-xs"
+            >
+              <span>Start Free</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -364,60 +451,101 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
           Pay a simple platform fee for the features you use. Email credits and WhatsApp messages are prepaid, so you only pay for what you send.
         </p>
 
-        {/* Monthly / Quarterly / Yearly 3-Way Switcher */}
-        <div 
-          role="group" 
-          aria-label="Billing period" 
-          className="flex items-center gap-1.5 p-1.5 bg-zinc-100 border border-zinc-200 rounded-2xl mt-3 shadow-xs"
-        >
-          {/* Monthly */}
-          <button
-            type="button"
-            aria-pressed={billingInterval === 'monthly'}
-            onClick={() => setBillingInterval('monthly')}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
-              billingInterval === 'monthly' 
-                ? 'bg-white text-zinc-900 shadow-sm' 
-                : 'text-zinc-600 hover:text-zinc-900'
-            }`}
-          >
-            Monthly
-          </button>
+        {/* Currency & Billing Switchers Container */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
+          
+          {/* Currency Switcher */}
+          <div className="flex items-center p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs">
+            <button
+              type="button"
+              aria-pressed={currency === 'USD'}
+              onClick={() => setCurrency('USD')}
+              className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+                currency === 'USD' 
+                  ? 'bg-white text-violet-700 shadow-sm' 
+                  : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>USD ($)</span>
+              <span className="text-[10px] text-zinc-400 font-normal">Global</span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={currency === 'INR'}
+              onClick={() => setCurrency('INR')}
+              className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+                currency === 'INR' 
+                  ? 'bg-white text-violet-700 shadow-sm' 
+                  : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <span>INR (₹)</span>
+              <span className="text-[10px] text-zinc-400 font-normal">India</span>
+            </button>
+          </div>
 
-          {/* Quarterly */}
-          <button
-            type="button"
-            aria-pressed={billingInterval === 'quarterly'}
-            onClick={() => setBillingInterval('quarterly')}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 ${
-              billingInterval === 'quarterly' 
-                ? 'bg-white text-zinc-900 shadow-sm' 
-                : 'text-zinc-600 hover:text-zinc-900'
-            }`}
+          {/* Monthly / Quarterly / Yearly 3-Way Switcher */}
+          <div 
+            role="group" 
+            aria-label="Billing period" 
+            className="flex items-center gap-1 p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs"
           >
-            <span>Quarterly</span>
-            <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-800">
-              Save 5%
-            </span>
-          </button>
+            {/* Monthly */}
+            <button
+              type="button"
+              aria-pressed={billingInterval === 'monthly'}
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+                billingInterval === 'monthly' 
+                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              Monthly
+            </button>
 
-          {/* Yearly */}
-          <button
-            type="button"
-            aria-pressed={billingInterval === 'yearly'}
-            onClick={() => setBillingInterval('yearly')}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 ${
-              billingInterval === 'yearly' 
-                ? 'bg-white text-zinc-900 shadow-sm' 
-                : 'text-zinc-600 hover:text-zinc-900'
-            }`}
-          >
-            <span>Yearly</span>
-            <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-violet-100 text-violet-800">
-              Save 10%
-            </span>
-          </button>
+            {/* Quarterly */}
+            <button
+              type="button"
+              aria-pressed={billingInterval === 'quarterly'}
+              onClick={() => setBillingInterval('quarterly')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+                billingInterval === 'quarterly' 
+                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <span>Quarterly</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                -5%
+              </span>
+            </button>
+
+            {/* Yearly */}
+            <button
+              type="button"
+              aria-pressed={billingInterval === 'yearly'}
+              onClick={() => setBillingInterval('yearly')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+                billingInterval === 'yearly' 
+                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <span>Yearly</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800">
+                -10%
+              </span>
+            </button>
+          </div>
+
         </div>
+
+        {/* Currency notice for clarity */}
+        <p className="text-xs text-zinc-400">
+          {currency === 'USD' ? 'Showing international pricing in USD ($)' : 'Showing domestic pricing in INR (₹) + GST'}
+        </p>
       </section>
 
       {/* Plans Section */}
@@ -429,8 +557,8 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             const price = plan.id === 'enterprise' 
               ? 'Custom' 
               : plan.id === 'free' 
-                ? '₹0' 
-                : inr(getPlanFee(plan.id));
+                ? (currency === 'USD' ? '$0' : '₹0')
+                : money(getPlanFee(plan.id));
             const unit = getUnitFor(plan.id);
 
             return (
@@ -464,7 +592,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                       type="button"
                       onClick={(e) => copyPlanLink(e, plan.id)}
                       className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-700 hover:bg-violet-50 transition-colors cursor-pointer border border-zinc-100 shrink-0"
-                      title={`Copy direct link to ${plan.name} plan`}
+                      title={`Copy direct link to ${plan.name} plan (${currency})`}
                       aria-label={`Copy direct link to ${plan.name} plan`}
                     >
                       {copiedPlanId === plan.id ? (
@@ -479,7 +607,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                   {copiedPlanId === plan.id && (
                     <div className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-1 px-2.5 flex items-center gap-1.5 animate-fadeIn">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Direct link copied!</span>
+                      <span>{currency} link copied!</span>
                     </div>
                   )}
 
@@ -527,7 +655,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     className="hover:text-violet-700 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <LinkIcon className="w-3 h-3" />
-                    <span>{copiedPlanId === plan.id ? 'Copied' : 'Share link'}</span>
+                    <span>{copiedPlanId === plan.id ? 'Copied' : `Share (${currency})`}</span>
                   </button>
                 </div>
 
@@ -537,7 +665,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         </div>
 
         <p className="mt-6 text-center text-xs text-zinc-500">
-          All prices in INR and exclusive of 18% GST. Email credits and WhatsApp messages are billed separately from the plan.
+          {currency === 'USD' 
+            ? 'All prices in USD. Email credits and WhatsApp messages are billed separately from the plan.' 
+            : 'All prices in INR and exclusive of 18% GST. Email credits and WhatsApp messages are billed separately from the plan.'}
         </p>
       </section>
 
@@ -575,10 +705,21 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    <tr><td className="py-2.5">10,000</td><td className="py-2.5 text-right font-semibold">₹1,200</td><td className="py-2.5 text-right text-zinc-500">₹0.12</td></tr>
-                    <tr><td className="py-2.5">50,000</td><td className="py-2.5 text-right font-semibold">₹5,000</td><td className="py-2.5 text-right text-zinc-500">₹0.10</td></tr>
-                    <tr><td className="py-2.5">1,00,000</td><td className="py-2.5 text-right font-semibold">₹8,000</td><td className="py-2.5 text-right text-zinc-500">₹0.08</td></tr>
-                    <tr><td className="py-2.5">5,00,000</td><td className="py-2.5 text-right font-semibold">₹30,000</td><td className="py-2.5 text-right text-zinc-500">₹0.06</td></tr>
+                    {currency === 'USD' ? (
+                      <>
+                        <tr><td className="py-2.5">10,000</td><td className="py-2.5 text-right font-semibold">$15</td><td className="py-2.5 text-right text-zinc-500">$0.0015</td></tr>
+                        <tr><td className="py-2.5">50,000</td><td className="py-2.5 text-right font-semibold">$60</td><td className="py-2.5 text-right text-zinc-500">$0.0012</td></tr>
+                        <tr><td className="py-2.5">1,00,000</td><td className="py-2.5 text-right font-semibold">$100</td><td className="py-2.5 text-right text-zinc-500">$0.0010</td></tr>
+                        <tr><td className="py-2.5">5,00,000</td><td className="py-2.5 text-right font-semibold">$380</td><td className="py-2.5 text-right text-zinc-500">$0.00076</td></tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr><td className="py-2.5">10,000</td><td className="py-2.5 text-right font-semibold">₹1,200</td><td className="py-2.5 text-right text-zinc-500">₹0.12</td></tr>
+                        <tr><td className="py-2.5">50,000</td><td className="py-2.5 text-right font-semibold">₹5,000</td><td className="py-2.5 text-right text-zinc-500">₹0.10</td></tr>
+                        <tr><td className="py-2.5">1,00,000</td><td className="py-2.5 text-right font-semibold">₹8,000</td><td className="py-2.5 text-right text-zinc-500">₹0.08</td></tr>
+                        <tr><td className="py-2.5">5,00,000</td><td className="py-2.5 text-right font-semibold">₹30,000</td><td className="py-2.5 text-right text-zinc-500">₹0.06</td></tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -593,7 +734,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <h3 className="text-lg font-bold text-zinc-900">WhatsApp messages</h3>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Official Meta direct rates (98p for Marketing, 25p for Utility/Authentication/Service). Top up any amount into your wallet.
+                Official Meta direct rates {currency === 'USD' ? 'in USD' : '(98p for Marketing, 25p for Utility/Authentication/Service)'}. Top up any amount into your wallet.
               </p>
 
               <div className="overflow-x-auto mt-2">
@@ -605,10 +746,21 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    <tr><td className="py-2.5">Marketing</td><td className="py-2.5 text-right font-semibold">₹0.98 <span className="text-[10px] text-zinc-500 font-normal">(98p)</span></td></tr>
-                    <tr><td className="py-2.5">Utility &amp; Authentication</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
-                    <tr><td className="py-2.5">Service replies (after 1,000 free/mo)</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
-                    <tr><td className="py-2.5">Incoming customer messages</td><td className="py-2.5 text-right font-semibold text-emerald-600">Free</td></tr>
+                    {currency === 'USD' ? (
+                      <>
+                        <tr><td className="py-2.5">Marketing</td><td className="py-2.5 text-right font-semibold">$0.012</td></tr>
+                        <tr><td className="py-2.5">Utility &amp; Authentication</td><td className="py-2.5 text-right font-semibold">$0.003</td></tr>
+                        <tr><td className="py-2.5">Service replies (after 1,000 free/mo)</td><td className="py-2.5 text-right font-semibold">$0.003</td></tr>
+                        <tr><td className="py-2.5">Incoming customer messages</td><td className="py-2.5 text-right font-semibold text-emerald-600">Free</td></tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr><td className="py-2.5">Marketing</td><td className="py-2.5 text-right font-semibold">₹0.98 <span className="text-[10px] text-zinc-500 font-normal">(98p)</span></td></tr>
+                        <tr><td className="py-2.5">Utility &amp; Authentication</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
+                        <tr><td className="py-2.5">Service replies (after 1,000 free/mo)</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
+                        <tr><td className="py-2.5">Incoming customer messages</td><td className="py-2.5 text-right font-semibold text-emerald-600">Free</td></tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -629,11 +781,23 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="overflow-x-auto mt-2">
                 <table className="w-full text-xs">
                   <tbody className="divide-y divide-zinc-200/60">
-                    <tr><td className="py-2.5">Extra 10,000 contacts</td><td className="py-2.5 text-right font-semibold">₹500/mo</td></tr>
-                    <tr><td className="py-2.5">Extra user</td><td className="py-2.5 text-right font-semibold">₹300/mo</td></tr>
-                    <tr><td className="py-2.5">Ads Manager on Growth</td><td className="py-2.5 text-right font-semibold">₹999/mo</td></tr>
-                    <tr><td className="py-2.5">Dedicated sending IP</td><td className="py-2.5 text-right font-semibold">₹4,000/mo</td></tr>
-                    <tr><td className="py-2.5">Email verification</td><td className="py-2.5 text-right font-semibold text-zinc-500">Pay per check</td></tr>
+                    {currency === 'USD' ? (
+                      <>
+                        <tr><td className="py-2.5">Extra 10,000 contacts</td><td className="py-2.5 text-right font-semibold">$10/mo</td></tr>
+                        <tr><td className="py-2.5">Extra user</td><td className="py-2.5 text-right font-semibold">$5/mo</td></tr>
+                        <tr><td className="py-2.5">Ads Manager on Growth</td><td className="py-2.5 text-right font-semibold">$15/mo</td></tr>
+                        <tr><td className="py-2.5">Dedicated sending IP</td><td className="py-2.5 text-right font-semibold">$50/mo</td></tr>
+                        <tr><td className="py-2.5">Email verification</td><td className="py-2.5 text-right font-semibold text-zinc-500">Pay per check</td></tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr><td className="py-2.5">Extra 10,000 contacts</td><td className="py-2.5 text-right font-semibold">₹500/mo</td></tr>
+                        <tr><td className="py-2.5">Extra user</td><td className="py-2.5 text-right font-semibold">₹300/mo</td></tr>
+                        <tr><td className="py-2.5">Ads Manager on Growth</td><td className="py-2.5 text-right font-semibold">₹999/mo</td></tr>
+                        <tr><td className="py-2.5">Dedicated sending IP</td><td className="py-2.5 text-right font-semibold">₹4,000/mo</td></tr>
+                        <tr><td className="py-2.5">Email verification</td><td className="py-2.5 text-right font-semibold text-zinc-500">Pay per check</td></tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -652,7 +816,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900">Estimate your monthly bill</h2>
               <p className="text-sm text-zinc-600">
-                Pick a plan and drag the sliders to match your exact sending volumes.
+                Pick a plan and drag the sliders to match your exact sending volumes in {currency}.
               </p>
             </div>
 
@@ -714,7 +878,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="flex justify-between items-center text-sm font-semibold">
                 <label htmlFor="calc-mkt" className="text-zinc-800 flex items-center gap-1.5">
                   <MessageSquare className="w-4 h-4 text-zinc-400" />
-                  <span>WhatsApp marketing messages (₹0.98)</span>
+                  <span>WhatsApp marketing messages ({moneyDec(waMarketingRate)})</span>
                 </label>
                 <span className="text-violet-700 font-bold font-mono text-base">{num(mkt)}</span>
               </div>
@@ -741,7 +905,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="flex justify-between items-center text-sm font-semibold">
                 <label htmlFor="calc-util" className="text-zinc-800 flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-zinc-400" />
-                  <span>WhatsApp utility &amp; service messages (₹0.25)</span>
+                  <span>WhatsApp utility &amp; service messages ({moneyDec(waUtilityRate)})</span>
                 </label>
                 <span className="text-violet-700 font-bold font-mono text-base">{num(util)}</span>
               </div>
@@ -771,7 +935,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Your Estimate</span>
                 <span className="text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 font-mono">
-                  {billingInterval === 'yearly' 
+                  {currency} · {billingInterval === 'yearly' 
                     ? 'Billed Yearly (10% off)' 
                     : billingInterval === 'quarterly' 
                       ? 'Billed Quarterly (5% off)' 
@@ -783,39 +947,39 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-zinc-300">
                   <span>{selectedCalcPlan.charAt(0).toUpperCase() + selectedCalcPlan.slice(1)} platform fee</span>
-                  <span className="font-semibold text-white">{inr(platformCost)}</span>
+                  <span className="font-semibold text-white">{money(platformCost)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
                   <span className="truncate pr-2">Email credits ({calcEmailRateLabel})</span>
-                  <span className="font-semibold text-white shrink-0">{inr(emailCost)}</span>
+                  <span className="font-semibold text-white shrink-0">{money(emailCost)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
-                  <span>WhatsApp marketing (@ ₹0.98)</span>
-                  <span className="font-semibold text-white">{inr(mktCost)}</span>
+                  <span>WhatsApp marketing (@ {moneyDec(waMarketingRate)})</span>
+                  <span className="font-semibold text-white">{money(mktCost)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
-                  <span>WhatsApp utility &amp; service (@ ₹0.25)</span>
-                  <span className="font-semibold text-white">{inr(utilCost)}</span>
+                  <span>WhatsApp utility &amp; service (@ {moneyDec(waUtilityRate)})</span>
+                  <span className="font-semibold text-white">{money(utilCost)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-emerald-400 font-medium">
                   <span>Included WhatsApp ({waAllowanceText})</span>
-                  <span className="font-bold">−{inr(waIncludedValue)}</span>
+                  <span className="font-bold">−{money(waIncludedValue)}</span>
                 </div>
 
                 <div className="h-px bg-zinc-800 my-2"></div>
 
                 <div className="flex justify-between items-center text-zinc-300">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-white">{inr(subtotal)}</span>
+                  <span className="font-semibold text-white">{money(subtotal)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-400">
-                  <span>GST (18%)</span>
-                  <span className="font-semibold text-zinc-300">{inr(gst)}</span>
+                  <span>{currency === 'INR' ? 'GST (18%)' : 'Estimated local taxes'}</span>
+                  <span className="font-semibold text-zinc-300">{currency === 'INR' ? money(taxAmount) : '$0'}</span>
                 </div>
               </div>
 
@@ -823,12 +987,13 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="pt-4 border-t border-zinc-800">
                 <div className="text-xs text-zinc-400">Estimated total per month</div>
                 <div className="text-3xl sm:text-4xl font-extrabold text-white mt-1 tracking-tight">
-                  {inr(grandTotal)}
+                  {money(grandTotal)}
                 </div>
               </div>
 
               <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Your plan’s included emails and WhatsApp messages/credits are utilized first. Rates are based on Indian numbers.
+                Your plan’s included emails and WhatsApp messages/credits are utilized first.
+                {currency === 'USD' ? ' International Meta rates apply.' : ' Rates are based on Indian numbers.'}
               </p>
             </div>
 
@@ -850,7 +1015,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         <div className="space-y-4 mb-8">
           <h2 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Compare every feature</h2>
           <p className="text-sm text-zinc-600">
-            A granular breakdown of every capability across our tiered plans.
+            A granular breakdown of every capability across our tiered plans ({currency}).
           </p>
         </div>
 
@@ -900,8 +1065,8 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">WhatsApp messages / credit included</td>
-                <td className="py-3 px-3 text-center text-zinc-600">₹50 on sign-up</td>
-                <td className="py-3 px-3 text-center text-zinc-600">₹100/month</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{currency === 'USD' ? '$1 on sign-up' : '₹50 on sign-up'}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{currency === 'USD' ? '$2/month' : '₹100/month'}</td>
                 <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">500 messages/mo</td>
                 <td className="py-3 px-3 text-center text-zinc-600">1,000 messages/mo</td>
                 <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
