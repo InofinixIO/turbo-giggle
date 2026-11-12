@@ -70,7 +70,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const [util, setUtil] = useState<number>(2000);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [copiedPlanId, setCopiedPlanId] = useState<PlanId | 'all' | null>(null);
+  const [copiedEstimate, setCopiedEstimate] = useState<boolean>(false);
   const [highlightedPlan, setHighlightedPlan] = useState<PlanId | null>(null);
+  const [highlightedCalc, setHighlightedCalc] = useState<boolean>(false);
 
   // Discounts
   const quarterlyDiscount = 0.05; // 5% off
@@ -150,13 +152,16 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     return `per month${taxSuffix}`;
   };
 
-  // Handle URL deep linking (e.g. ?plan=growth&billing=quarterly&currency=USD)
+  // Handle URL deep linking (e.g. ?plan=growth&emails=60000&mkt=8000&util=3000&billing=quarterly&currency=USD#calculator)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get('plan') as PlanId | null;
       const billingParam = params.get('billing') as BillingInterval | null;
       const currParam = params.get('currency')?.toUpperCase() as Currency | null;
+      const emailsParam = params.get('emails');
+      const mktParam = params.get('mkt');
+      const utilParam = params.get('util');
 
       if (currParam && (currParam === 'USD' || currParam === 'INR')) {
         setCurrency(currParam);
@@ -166,10 +171,35 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         setBillingInterval(billingParam);
       }
 
+      if (emailsParam && !isNaN(Number(emailsParam))) {
+        setEmails(Math.max(0, Math.min(500000, Number(emailsParam))));
+      }
+      if (mktParam && !isNaN(Number(mktParam))) {
+        setMkt(Math.max(0, Math.min(50000, Number(mktParam))));
+      }
+      if (utilParam && !isNaN(Number(utilParam))) {
+        setUtil(Math.max(0, Math.min(50000, Number(utilParam))));
+      }
+
       if (planParam && ['free', 'starter', 'growth', 'pro', 'enterprise'].includes(planParam)) {
         if (['free', 'starter', 'growth', 'pro'].includes(planParam)) {
           setSelectedCalcPlan(planParam as CalcPlanId);
         }
+      }
+
+      const hasCalcParams = emailsParam !== null || mktParam !== null || utilParam !== null;
+      const isCalcTarget = window.location.hash === '#calculator' || hasCalcParams;
+
+      if (isCalcTarget) {
+        setTimeout(() => {
+          const el = document.getElementById('calculator');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setHighlightedCalc(true);
+            setTimeout(() => setHighlightedCalc(false), 3500);
+          }
+        }, 350);
+      } else if (planParam) {
         setTimeout(() => {
           const el = document.getElementById(`plan-${planParam}`);
           if (el) {
@@ -197,6 +227,28 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         setTimeout(() => {
           setCopiedPlanId((prev) => (prev === planId ? null : prev));
         }, 2500);
+      });
+    } catch {
+      // fallback
+    }
+  };
+
+  // Copy shareable link for current estimate calculator configuration
+  const copyEstimateLink = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      const url = new URL(window.location.origin + window.location.pathname);
+      url.searchParams.set('plan', selectedCalcPlan);
+      url.searchParams.set('emails', emails.toString());
+      url.searchParams.set('mkt', mkt.toString());
+      url.searchParams.set('util', util.toString());
+      url.searchParams.set('billing', billingInterval);
+      url.searchParams.set('currency', currency);
+      url.hash = 'calculator';
+
+      navigator.clipboard.writeText(url.toString()).then(() => {
+        setCopiedEstimate(true);
+        setTimeout(() => setCopiedEstimate(false), 2500);
       });
     } catch {
       // fallback
@@ -808,16 +860,43 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
       </section>
 
       {/* Interactive Bill Calculator Section */}
-      <section id="calculator" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section 
+        id="calculator" 
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 transition-all duration-500 rounded-3xl ${
+          highlightedCalc ? 'ring-4 ring-violet-500 shadow-2xl bg-violet-50/20' : ''
+        }`}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Controls Panel */}
           <div className="lg:col-span-7 bg-white border border-zinc-200 rounded-2xl p-6 sm:p-8 flex flex-col gap-7 shadow-xs">
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900">Estimate your monthly bill</h2>
-              <p className="text-sm text-zinc-600">
-                Pick a plan and drag the sliders to match your exact sending volumes in {currency}.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900">Estimate your monthly bill</h2>
+                <p className="text-sm text-zinc-600">
+                  Pick a plan and drag the sliders to match your exact sending volumes in {currency}.
+                </p>
+              </div>
+
+              {/* Share Estimate Button */}
+              <button
+                type="button"
+                onClick={copyEstimateLink}
+                className="self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200/80 transition-all cursor-pointer shrink-0 shadow-xs active:scale-95"
+                title="Copy shareable link with current slider & plan values"
+              >
+                {copiedEstimate ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                    <span className="text-emerald-700 font-bold">Estimate Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4" />
+                    <span>Share estimate</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Plan Picker Buttons */}
@@ -934,13 +1013,28 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Your Estimate</span>
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 font-mono">
-                  {currency} · {billingInterval === 'yearly' 
-                    ? 'Billed Yearly (10% off)' 
-                    : billingInterval === 'quarterly' 
-                      ? 'Billed Quarterly (5% off)' 
-                      : 'Monthly Billing'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 font-mono">
+                    {currency} · {billingInterval === 'yearly' 
+                      ? 'Yearly (-10%)' 
+                      : billingInterval === 'quarterly' 
+                        ? 'Quarterly (-5%)' 
+                        : 'Monthly'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyEstimateLink}
+                    className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                    title="Share this estimate calculation"
+                    aria-label="Share this estimate calculation"
+                  >
+                    {copiedEstimate ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Share2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Line Items */}
@@ -997,14 +1091,34 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleCtaClick(selectedCalcPlan)}
-              className="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-bold text-sm transition-colors cursor-pointer text-center shadow-md flex items-center justify-center gap-2"
-            >
-              <span>Start with {selectedCalcPlan.charAt(0).toUpperCase() + selectedCalcPlan.slice(1)}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={() => handleCtaClick(selectedCalcPlan)}
+                className="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-bold text-sm transition-colors cursor-pointer text-center shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Start with {selectedCalcPlan.charAt(0).toUpperCase() + selectedCalcPlan.slice(1)}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={copyEstimateLink}
+                className="w-full py-2.5 px-4 bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {copiedEstimate ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+                    <span className="text-emerald-300 font-bold">Estimate link copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span>Share this estimate configuration</span>
+                  </>
+                )}
+              </button>
+            </div>
           </aside>
 
         </div>
