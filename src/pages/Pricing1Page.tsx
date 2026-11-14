@@ -293,7 +293,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
     { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.85, currency: "INR", description: "WhatsApp Marketing conversation" },
     { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Utility message" },
     { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Authentication OTP" },
-    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Service conversation" }
+    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Service  replies (after 1,000 free a month)" }
   ],
   rules: {
     free_service_messages_monthly: 1000,
@@ -433,7 +433,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
     { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.01, currency: "USD", description: "WhatsApp Marketing conversation" },
     { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Utility message" },
     { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Authentication OTP" },
-    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Service conversation" }
+    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Service  replies (after 1,000 free a month)" }
   ],
   rules: {
     free_service_messages_monthly: 1000,
