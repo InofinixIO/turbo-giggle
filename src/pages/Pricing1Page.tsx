@@ -440,7 +440,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const [highlightedPlan, setHighlightedPlan] = useState<PlanId | null>(null);
   const [highlightedCalc, setHighlightedCalc] = useState<boolean>(false);
 
-  // Fetch Pricing Data from API: https://api.sit.onedigilta.in/api/pricing
+  // Fetch Pricing Data from API: https://api.sit.onedigilta.in/api/pricing with full offline fallback
   useEffect(() => {
     const controller = new AbortController();
     const fetchPricing = async () => {
@@ -449,15 +449,33 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         const url = `https://api.sit.onedigilta.in/api/pricing?currency=${currency}`;
         const response = await fetch(url, { signal: controller.signal });
         if (response.ok) {
-          const data = await response.json();
+          const rawData = await response.json();
+          // Support both direct object and wrapped { data: ... }
+          const data: ApiPricingResponse = (rawData && rawData.plans && Array.isArray(rawData.plans))
+            ? rawData
+            : (rawData && rawData.data && Array.isArray(rawData.data.plans))
+              ? rawData.data
+              : null;
+
           if (data && data.plans && Array.isArray(data.plans)) {
             setApiData(data);
+            return;
           }
         }
-      } catch (err) {
-        // Silently keep using fallback data if blocked or offline
+        // Fallback to static data if API response is not ok
+        setApiData(currency === 'USD' ? INITIAL_USD_DATA : INITIAL_INR_DATA);
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          // Do not overwrite state if request was aborted
+          return;
+        }
+        console.warn('Pricing API fetch failed, using fallback:', err);
+        // Fallback to static data on network error, CORS, or timeout
+        setApiData(currency === 'USD' ? INITIAL_USD_DATA : INITIAL_INR_DATA);
       } finally {
-        setIsLoadingApi(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingApi(false);
+        }
       }
     };
 
@@ -476,32 +494,34 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     return item ? item.rate_per_message : (currency === 'USD' ? 0.0047 : 0.40);
   }, [apiData, currency]);
 
+  const currSymbol = apiData.currency_symbol || (currency === 'USD' ? '$' : '₹');
+
   // Helper formatters
   const money = (n: number) => {
-    if (currency === 'USD') {
+    if (currency === 'USD' || apiData.currency === 'USD') {
       return '$' + Math.round(n).toLocaleString('en-US');
     }
     return '₹' + Math.round(n).toLocaleString('en-IN');
   };
 
   const moneyDec = (n: number) => {
-    if (currency === 'USD') {
+    if (currency === 'USD' || apiData.currency === 'USD') {
       return '$' + n.toFixed(3);
     }
     return '₹' + n.toFixed(2);
   };
 
-  const num = (n: number) => n.toLocaleString(currency === 'USD' ? 'en-US' : 'en-IN');
+  const num = (n: number) => n.toLocaleString(currency === 'USD' || apiData.currency === 'USD' ? 'en-US' : 'en-IN');
+
+  const getPlanBySlug = (slug: PlanId) => {
+    return apiData.plans.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+  };
 
   // Plan Price lookup from API response
   const getPlanPricing = (slug: PlanId) => {
-    const plan = apiData.plans.find(p => p.slug === slug);
+    const plan = getPlanBySlug(slug);
     if (!plan || plan.is_custom || !plan.pricing) {
       return { price: 'Custom', unit: 'Volume-based pricing', payable: 0, effectiveMonthly: 0 };
-    }
-
-    if (slug === 'free') {
-      return { price: currency === 'USD' ? '$0' : '₹0', unit: 'Free forever', payable: 0, effectiveMonthly: 0 };
     }
 
     const tier = billingInterval === 'yearly' 
@@ -516,8 +536,14 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
     const effectiveMonthly = tier.effective_monthly;
     const payable = tier.payable;
+    const taxSuffix = (apiData.currency === 'INR' || currency === 'INR') ? ' + GST' : '';
+
+    // If both payable and effective_monthly are 0, show Free forever
+    if (payable === 0 && effectiveMonthly === 0) {
+      return { price: `${currSymbol}0`, unit: 'Free forever', payable: 0, effectiveMonthly: 0 };
+    }
+
     const priceFormatted = money(effectiveMonthly);
-    const taxSuffix = currency === 'INR' ? ' + GST' : '';
 
     let unit = `per month${taxSuffix}`;
     if (billingInterval === 'quarterly') {
@@ -734,7 +760,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     },
     {
       question: 'Why is WhatsApp billed separately?',
-      answer: `WhatsApp messages are charged at official Meta rates (${currency === 'USD' ? `$${waMarketingRate} for Marketing, $${waUtilityRate} for Utility/Auth` : `₹${waMarketingRate} (85p) for Marketing, ₹${waUtilityRate} (40p) for Utility/Authentication`}). Growth includes 500 WhatsApp messages/mo and Pro includes 1,000 messages/mo. Any extra volume draws transparently from your prepaid wallet.`
+      answer: `WhatsApp messages are charged at official Meta rates (${currency === 'USD' ? `$${waMarketingRate} for Marketing, $${waUtilityRate} for Utility/Auth` : `₹${waMarketingRate} for Marketing, ₹${waUtilityRate} for Utility/Authentication`}). Growth includes ${getPlanBySlug('growth')?.allowances.whatsapp_included.count ?? 500} WhatsApp messages/mo and Pro includes ${getPlanBySlug('pro')?.allowances.whatsapp_included.count ?? 1000} messages/mo. Any extra volume draws transparently from your prepaid wallet.`
     },
     {
       question: 'How do the quarterly and yearly discounts work?',
@@ -1080,7 +1106,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <h3 className="text-lg font-bold text-zinc-900">Email credits</h3>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Every plan includes monthly emails (500 Free, 1,000 Starter, 15,000 Growth, 50,000 Pro). Purchased credits remain valid for {apiData.rules.email_pack_validity_months} months.
+                Every plan includes monthly emails ({num(getIncludedEmails('free'))} Free, {num(getIncludedEmails('starter'))} Starter, {num(getIncludedEmails('growth'))} Growth, {num(getIncludedEmails('pro'))} Pro). Purchased credits remain valid for {apiData.rules.email_pack_validity_months} months.
               </p>
               
               <div className="overflow-x-auto mt-2">
@@ -1476,44 +1502,86 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 </th>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                <td className="py-3 px-5 font-medium text-zinc-800">Effective Monthly Price</td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('free').price}</td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('starter').price}</td>
+                <td className="py-3 px-3 text-center font-bold text-violet-700 bg-violet-50/20">{getPlanPricing('growth').price}</td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('pro').price}</td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('enterprise').price}</td>
+              </tr>
+              <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Contacts</td>
-                <td className="py-3 px-3 text-center text-zinc-600">500</td>
-                <td className="py-3 px-3 text-center text-zinc-600">2,500</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">10,000</td>
-                <td className="py-3 px-3 text-center text-zinc-600">50,000</td>
-                <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('free')?.limits.contacts === 'number' ? num(getPlanBySlug('free')!.limits.contacts as number) : (getPlanBySlug('free')?.limits.contacts || '500')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('starter')?.limits.contacts === 'number' ? num(getPlanBySlug('starter')!.limits.contacts as number) : (getPlanBySlug('starter')?.limits.contacts || '2,500')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">
+                  {typeof getPlanBySlug('growth')?.limits.contacts === 'number' ? num(getPlanBySlug('growth')!.limits.contacts as number) : (getPlanBySlug('growth')?.limits.contacts || '10,000')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('pro')?.limits.contacts === 'number' ? num(getPlanBySlug('pro')!.limits.contacts as number) : (getPlanBySlug('pro')?.limits.contacts || '50,000')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {getPlanBySlug('enterprise')?.limits.contacts ? String(getPlanBySlug('enterprise')!.limits.contacts).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.contacts).slice(1) : 'Custom'}
+                </td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Users</td>
-                <td className="py-3 px-3 text-center text-zinc-600">1</td>
-                <td className="py-3 px-3 text-center text-zinc-600">1</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">4</td>
-                <td className="py-3 px-3 text-center text-zinc-600">6</td>
-                <td className="py-3 px-3 text-center text-zinc-600">Unlimited</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('free')?.limits.users ?? 1}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('starter')?.limits.users ?? 1}</td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">{getPlanBySlug('growth')?.limits.users ?? 4}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('pro')?.limits.users ?? 6}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {getPlanBySlug('enterprise')?.limits.users ? String(getPlanBySlug('enterprise')!.limits.users).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.users).slice(1) : 'Unlimited'}
+                </td>
+              </tr>
+              <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                <td className="py-3 px-5 font-medium text-zinc-800">Domains</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('free')?.limits.domains ?? 1}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('starter')?.limits.domains ?? 1}</td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">{getPlanBySlug('growth')?.limits.domains ?? 3}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('pro')?.limits.domains ?? 6}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {getPlanBySlug('enterprise')?.limits.domains ? String(getPlanBySlug('enterprise')!.limits.domains).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.domains).slice(1) : 'Unlimited'}
+                </td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Emails included every month</td>
-                <td className="py-3 px-3 text-center text-zinc-600">500</td>
-                <td className="py-3 px-3 text-center text-zinc-600">1,000</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">15,000</td>
-                <td className="py-3 px-3 text-center text-zinc-600">50,000</td>
-                <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('free')?.allowances.emails_per_month === 'number' ? num(getPlanBySlug('free')!.allowances.emails_per_month as number) : '500'}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('starter')?.allowances.emails_per_month === 'number' ? num(getPlanBySlug('starter')!.allowances.emails_per_month as number) : '1,000'}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">
+                  {typeof getPlanBySlug('growth')?.allowances.emails_per_month === 'number' ? num(getPlanBySlug('growth')!.allowances.emails_per_month as number) : '15,000'}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {typeof getPlanBySlug('pro')?.allowances.emails_per_month === 'number' ? num(getPlanBySlug('pro')!.allowances.emails_per_month as number) : '50,000'}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {getPlanBySlug('enterprise')?.allowances.emails_per_month ? String(getPlanBySlug('enterprise')!.allowances.emails_per_month).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.allowances.emails_per_month).slice(1) : 'Custom'}
+                </td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">WhatsApp included</td>
                 <td className="py-3 px-3 text-center text-zinc-600">
-                  {apiData.plans.find(p => p.slug === 'free')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$1 on sign-up' : '₹50 on sign-up')}
+                  {getPlanBySlug('free')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$1 on sign-up' : '₹50 on sign-up')}
                 </td>
                 <td className="py-3 px-3 text-center text-zinc-600">
-                  {apiData.plans.find(p => p.slug === 'starter')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$2/month' : '₹100/month')}
+                  {getPlanBySlug('starter')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$2/month' : '₹100/month')}
                 </td>
                 <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">
-                  {apiData.plans.find(p => p.slug === 'growth')?.allowances.whatsapp_included.description || '500 messages/mo'}
+                  {getPlanBySlug('growth')?.allowances.whatsapp_included.description || '500 messages/mo'}
                 </td>
                 <td className="py-3 px-3 text-center text-zinc-600">
-                  {apiData.plans.find(p => p.slug === 'pro')?.allowances.whatsapp_included.description || '1,000 messages/mo'}
+                  {getPlanBySlug('pro')?.allowances.whatsapp_included.description || '1,000 messages/mo'}
                 </td>
-                <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {getPlanBySlug('enterprise')?.allowances.whatsapp_included.description || 'Custom per contract'}
+                </td>
               </tr>
             </tbody>
 
