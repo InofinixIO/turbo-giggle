@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Check, 
   ArrowRight, 
@@ -17,6 +18,51 @@ import {
 } from 'lucide-react';
 import { ModalType } from '../types';
 import { useRouter } from '../router/RouterContext';
+
+// Animated Price Component with smooth popLayout slide & blur transition
+interface AnimatedPriceProps {
+  value: string;
+  className?: string;
+}
+
+export const AnimatedPrice: React.FC<AnimatedPriceProps> = ({ value, className = '' }) => {
+  return (
+    <span className={`inline-flex items-center overflow-hidden relative ${className}`}>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={{ opacity: 0, y: 10, scale: 0.97, filter: 'blur(2px)' }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, y: -10, scale: 0.97, filter: 'blur(2px)' }}
+          transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-block"
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+};
+
+// Animated Text Component for units & secondary labels
+export const AnimatedText: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
+  return (
+    <span className={`inline-flex items-center overflow-hidden relative ${className}`}>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className="inline-block"
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+};
 
 interface Pricing1PageProps {
   onOpenModal: (type: ModalType) => void;
@@ -821,24 +867,38 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
           <div className="flex items-center gap-3 shrink-0">
             {/* Currency toggle in subnav */}
-            <div className="flex items-center p-0.5 bg-zinc-100 border border-zinc-200 rounded-lg text-[11px] font-semibold">
+            <div className="flex items-center p-0.5 bg-zinc-100 border border-zinc-200 rounded-lg text-[11px] font-semibold relative">
               <button
                 type="button"
                 onClick={() => setCurrency('USD')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
-                  currency === 'USD' ? 'bg-white text-violet-700 shadow-xs' : 'text-zinc-500 hover:text-zinc-800'
+                className={`relative px-2 py-1 rounded-md transition-colors cursor-pointer ${
+                  currency === 'USD' ? 'text-violet-700' : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
-                USD ($)
+                {currency === 'USD' && (
+                  <motion.div
+                    layoutId="subnavCurrencyPill"
+                    className="absolute inset-0 bg-white rounded-md shadow-xs border border-zinc-200/50"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">USD ($)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setCurrency('INR')}
-                className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
-                  currency === 'INR' ? 'bg-white text-violet-700 shadow-xs' : 'text-zinc-500 hover:text-zinc-800'
+                className={`relative px-2 py-1 rounded-md transition-colors cursor-pointer ${
+                  currency === 'INR' ? 'text-violet-700' : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
-                INR (₹)
+                {currency === 'INR' && (
+                  <motion.div
+                    layoutId="subnavCurrencyPill"
+                    className="absolute inset-0 bg-white rounded-md shadow-xs border border-zinc-200/50"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">INR (₹)</span>
               </button>
             </div>
 
@@ -873,33 +933,51 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
           
           {/* Currency Switcher */}
-          <div className="flex items-center p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs">
+          <div className="flex items-center p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs relative">
             <button
               type="button"
               aria-pressed={currency === 'USD'}
               onClick={() => setCurrency('USD')}
-              className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`relative px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 currency === 'USD' 
-                  ? 'bg-white text-violet-700 shadow-sm' 
+                  ? 'text-violet-700' 
                   : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              <Globe className="w-3.5 h-3.5" />
-              <span>USD ($)</span>
-              <span className="text-[10px] text-zinc-400 font-normal">Global</span>
+              {currency === 'USD' && (
+                <motion.div
+                  layoutId="currencyHeroPill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-zinc-200/50"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" />
+                <span>USD ($)</span>
+                <span className="text-[10px] text-zinc-400 font-normal">Global</span>
+              </span>
             </button>
             <button
               type="button"
               aria-pressed={currency === 'INR'}
               onClick={() => setCurrency('INR')}
-              className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`relative px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 currency === 'INR' 
-                  ? 'bg-white text-violet-700 shadow-sm' 
+                  ? 'text-violet-700' 
                   : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              <span>INR (₹)</span>
-              <span className="text-[10px] text-zinc-400 font-normal">India</span>
+              {currency === 'INR' && (
+                <motion.div
+                  layoutId="currencyHeroPill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-zinc-200/50"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <span>INR (₹)</span>
+                <span className="text-[10px] text-zinc-400 font-normal">India</span>
+              </span>
             </button>
           </div>
 
@@ -907,20 +985,27 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
           <div 
             role="group" 
             aria-label="Billing period" 
-            className="flex items-center gap-1 p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs"
+            className="flex items-center gap-1 p-1 bg-zinc-100 border border-zinc-200 rounded-2xl shadow-xs relative"
           >
             {/* Monthly */}
             <button
               type="button"
               aria-pressed={billingInterval === 'monthly'}
               onClick={() => setBillingInterval('monthly')}
-              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+              className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer ${
                 billingInterval === 'monthly' 
-                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  ? 'text-zinc-900' 
                   : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              Monthly
+              {billingInterval === 'monthly' && (
+                <motion.div
+                  layoutId="billingHeroPill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-zinc-200/50"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10">Monthly</span>
             </button>
 
             {/* Quarterly */}
@@ -928,15 +1013,24 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               type="button"
               aria-pressed={billingInterval === 'quarterly'}
               onClick={() => setBillingInterval('quarterly')}
-              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 billingInterval === 'quarterly' 
-                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  ? 'text-zinc-900' 
                   : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              <span>Quarterly</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                -{apiData.discounts.quarterly_percentage}%
+              {billingInterval === 'quarterly' && (
+                <motion.div
+                  layoutId="billingHeroPill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-zinc-200/50"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <span>Quarterly</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                  -{apiData.discounts.quarterly_percentage}%
+                </span>
               </span>
             </button>
 
@@ -945,15 +1039,24 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               type="button"
               aria-pressed={billingInterval === 'yearly'}
               onClick={() => setBillingInterval('yearly')}
-              className={`px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 billingInterval === 'yearly' 
-                  ? 'bg-white text-zinc-900 shadow-sm' 
+                  ? 'text-zinc-900' 
                   : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
-              <span>Yearly</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800">
-                -{apiData.discounts.yearly_percentage}%
+              {billingInterval === 'yearly' && (
+                <motion.div
+                  layoutId="billingHeroPill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm border border-zinc-200/50"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <span>Yearly</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800">
+                  -{apiData.discounts.yearly_percentage}%
+                </span>
               </span>
             </button>
           </div>
@@ -1025,12 +1128,12 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     </div>
                   )}
 
-                  <div className="space-y-1 pt-2 border-t border-zinc-100">
-                    <div className="text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight">
-                      {pricing.price}
+                  <div className="space-y-1 pt-2 border-t border-zinc-100 overflow-hidden">
+                    <div className="text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight min-h-[44px] flex items-center">
+                      <AnimatedPrice value={pricing.price} />
                     </div>
-                    <div className="text-xs text-zinc-500 min-h-[32px] leading-tight">
-                      {pricing.unit}
+                    <div className="text-xs text-zinc-500 min-h-[32px] leading-tight flex items-center">
+                      <AnimatedText value={pricing.unit} />
                     </div>
                   </div>
 
@@ -1125,8 +1228,12 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                       return (
                         <tr key={pack.credits}>
                           <td className="py-2.5">{num(pack.credits)}</td>
-                          <td className="py-2.5 text-right font-semibold">{pack.formatted_price}</td>
-                          <td className="py-2.5 text-right text-zinc-500">{formattedRate}</td>
+                          <td className="py-2.5 text-right font-semibold">
+                            <AnimatedPrice value={pack.formatted_price} />
+                          </td>
+                          <td className="py-2.5 text-right text-zinc-500">
+                            <AnimatedPrice value={formattedRate} />
+                          </td>
                         </tr>
                       );
                     })}
@@ -1164,7 +1271,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                       return (
                         <tr key={rate.feature_type}>
                           <td className="py-2.5">{label}</td>
-                          <td className="py-2.5 text-right font-semibold">{displayRate}</td>
+                          <td className="py-2.5 text-right font-semibold">
+                            <AnimatedPrice value={displayRate} />
+                          </td>
                         </tr>
                       );
                     })}
@@ -1195,7 +1304,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     {apiData.addons.map((addon) => (
                       <tr key={addon.addon_key}>
                         <td className="py-2.5">{addon.name}</td>
-                        <td className="py-2.5 text-right font-semibold">{addon.formatted_price}/{addon.unit === 'per check' ? 'chk' : 'mo'}</td>
+                        <td className="py-2.5 text-right font-semibold">
+                          <AnimatedPrice value={`${addon.formatted_price}/${addon.unit === 'per check' ? 'chk' : 'mo'}`} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1260,13 +1371,20 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => setSelectedCalcPlan(planKey)}
-                      className={`py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer text-center ${
+                      className={`relative py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center ${
                         isSelected 
-                          ? 'bg-violet-700 text-white shadow-sm ring-1 ring-violet-700' 
+                          ? 'text-white' 
                           : 'bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-200'
                       }`}
                     >
-                      {name}
+                      {isSelected && (
+                        <motion.div
+                          layoutId="calcPlanPill"
+                          className="absolute inset-0 bg-violet-700 rounded-xl shadow-sm ring-1 ring-violet-700"
+                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                      <span className="relative z-10">{name}</span>
                     </button>
                   );
                 })}
@@ -1280,7 +1398,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                   <Mail className="w-4 h-4 text-zinc-400" />
                   <span>Emails per month</span>
                 </label>
-                <span className="text-violet-700 font-bold font-mono text-base">{num(emails)}</span>
+                <span className="text-violet-700 font-bold font-mono text-base">
+                  <AnimatedPrice value={num(emails)} />
+                </span>
               </div>
               <input
                 id="calc-emails"
@@ -1305,9 +1425,11 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="flex justify-between items-center text-sm font-semibold">
                 <label htmlFor="calc-mkt" className="text-zinc-800 flex items-center gap-1.5">
                   <MessageSquare className="w-4 h-4 text-zinc-400" />
-                  <span>WhatsApp marketing messages ({moneyDec(waMarketingRate)})</span>
+                  <span>WhatsApp marketing messages (@ <AnimatedPrice value={moneyDec(waMarketingRate)} />)</span>
                 </label>
-                <span className="text-violet-700 font-bold font-mono text-base">{num(mkt)}</span>
+                <span className="text-violet-700 font-bold font-mono text-base">
+                  <AnimatedPrice value={num(mkt)} />
+                </span>
               </div>
               <input
                 id="calc-mkt"
@@ -1332,9 +1454,11 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="flex justify-between items-center text-sm font-semibold">
                 <label htmlFor="calc-util" className="text-zinc-800 flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-zinc-400" />
-                  <span>WhatsApp utility &amp; service messages ({moneyDec(waUtilityRate)})</span>
+                  <span>WhatsApp utility &amp; service messages (@ <AnimatedPrice value={moneyDec(waUtilityRate)} />)</span>
                 </label>
-                <span className="text-violet-700 font-bold font-mono text-base">{num(util)}</span>
+                <span className="text-violet-700 font-bold font-mono text-base">
+                  <AnimatedPrice value={num(util)} />
+                </span>
               </div>
               <input
                 id="calc-util"
@@ -1389,47 +1513,47 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-zinc-300">
                   <span>{selectedCalcPlan.charAt(0).toUpperCase() + selectedCalcPlan.slice(1)} platform fee</span>
-                  <span className="font-semibold text-white">{money(platformCost)}</span>
+                  <AnimatedPrice value={money(platformCost)} className="font-semibold text-white" />
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
                   <span className="truncate pr-2">Email credits ({calcEmailRateLabel})</span>
-                  <span className="font-semibold text-white shrink-0">{money(emailCost)}</span>
+                  <AnimatedPrice value={money(emailCost)} className="font-semibold text-white shrink-0" />
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
-                  <span>WhatsApp marketing (@ {moneyDec(waMarketingRate)})</span>
-                  <span className="font-semibold text-white">{money(mktCost)}</span>
+                  <span>WhatsApp marketing (@ <AnimatedPrice value={moneyDec(waMarketingRate)} />)</span>
+                  <AnimatedPrice value={money(mktCost)} className="font-semibold text-white" />
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-300">
-                  <span>WhatsApp utility &amp; service (@ {moneyDec(waUtilityRate)})</span>
-                  <span className="font-semibold text-white">{money(utilCost)}</span>
+                  <span>WhatsApp utility &amp; service (@ <AnimatedPrice value={moneyDec(waUtilityRate)} />)</span>
+                  <AnimatedPrice value={money(utilCost)} className="font-semibold text-white" />
                 </div>
 
                 <div className="flex justify-between items-center text-emerald-400 font-medium">
                   <span>Included WhatsApp ({waAllowanceText})</span>
-                  <span className="font-bold">−{money(waIncludedValue)}</span>
+                  <AnimatedPrice value={`−${money(waIncludedValue)}`} className="font-bold text-emerald-400" />
                 </div>
 
                 <div className="h-px bg-zinc-800 my-2"></div>
 
                 <div className="flex justify-between items-center text-zinc-300">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-white">{money(subtotal)}</span>
+                  <AnimatedPrice value={money(subtotal)} className="font-semibold text-white" />
                 </div>
 
                 <div className="flex justify-between items-center text-zinc-400">
                   <span>{currency === 'INR' ? 'GST (18%)' : 'Estimated local taxes'}</span>
-                  <span className="font-semibold text-zinc-300">{currency === 'INR' ? money(taxAmount) : '$0'}</span>
+                  <AnimatedPrice value={currency === 'INR' ? money(taxAmount) : '$0'} className="font-semibold text-zinc-300" />
                 </div>
               </div>
 
               {/* Total Display */}
               <div className="pt-4 border-t border-zinc-800">
                 <div className="text-xs text-zinc-400">Estimated total per month</div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-white mt-1 tracking-tight">
-                  {money(grandTotal)}
+                <div className="text-3xl sm:text-4xl font-extrabold text-white mt-1 tracking-tight min-h-[44px] flex items-center">
+                  <AnimatedPrice value={money(grandTotal)} />
                 </div>
               </div>
 
@@ -1503,11 +1627,21 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Effective Monthly Price</td>
-                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('free').price}</td>
-                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('starter').price}</td>
-                <td className="py-3 px-3 text-center font-bold text-violet-700 bg-violet-50/20">{getPlanPricing('growth').price}</td>
-                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('pro').price}</td>
-                <td className="py-3 px-3 text-center font-bold text-zinc-900">{getPlanPricing('enterprise').price}</td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">
+                  <AnimatedPrice value={getPlanPricing('free').price} />
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">
+                  <AnimatedPrice value={getPlanPricing('starter').price} />
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-violet-700 bg-violet-50/20">
+                  <AnimatedPrice value={getPlanPricing('growth').price} />
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">
+                  <AnimatedPrice value={getPlanPricing('pro').price} />
+                </td>
+                <td className="py-3 px-3 text-center font-bold text-zinc-900">
+                  <AnimatedPrice value={getPlanPricing('enterprise').price} />
+                </td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Contacts</td>
