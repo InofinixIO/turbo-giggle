@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Check, 
   ArrowRight, 
@@ -12,7 +12,8 @@ import {
   Link as LinkIcon,
   CheckCircle2,
   Share2,
-  Globe
+  Globe,
+  Loader2
 } from 'lucide-react';
 import { ModalType } from '../types';
 import { useRouter } from '../router/RouterContext';
@@ -26,14 +27,373 @@ type CalcPlanId = 'free' | 'starter' | 'growth' | 'pro';
 type BillingInterval = 'monthly' | 'quarterly' | 'yearly';
 type Currency = 'USD' | 'INR';
 
-interface PlanDef {
-  id: PlanId;
-  name: string;
-  tagline: string;
-  cta: string;
-  featured?: boolean;
-  features: string[];
+// API Interfaces
+interface ApiPlanPricingTier {
+  payable: number;
+  effective_monthly: number;
+  discount_percentage: number;
+  billing_months?: number;
+  formatted: string;
 }
+
+interface ApiPlanDto {
+  name: string;
+  slug: PlanId;
+  description: string;
+  is_custom: boolean;
+  limits: {
+    users: number | string;
+    contacts: number | string;
+    domains: number | string;
+  };
+  allowances: {
+    emails_per_month: number | string;
+    whatsapp_included: {
+      type: string;
+      amount?: number;
+      count?: number;
+      currency?: string;
+      is_one_time?: boolean;
+      validity_days?: number;
+      destination?: string;
+      description: string;
+    };
+  };
+  pricing: {
+    monthly: ApiPlanPricingTier | null;
+    quarterly: ApiPlanPricingTier | null;
+    yearly: ApiPlanPricingTier | null;
+    is_custom?: boolean;
+    contact_sales?: boolean;
+  };
+}
+
+interface ApiEmailPackDto {
+  credits: number;
+  price: number;
+  currency: string;
+  formatted_price: string;
+  validity_months: number;
+}
+
+interface ApiAddonDto {
+  addon_key: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  billing_interval: string;
+  unit: string;
+  applicable_plan: string | null;
+  formatted_price: string;
+}
+
+interface ApiWhatsAppRateDto {
+  feature_type: string;
+  category: string;
+  rate_per_message: number;
+  currency: string;
+  description: string;
+}
+
+interface ApiRulesDto {
+  free_service_messages_monthly: number;
+  inbound_messages_free: boolean;
+  email_pack_validity_months: number;
+  free_whatsapp_bonus_validity_days: number;
+}
+
+interface ApiPricingResponse {
+  currency: string;
+  currency_symbol: string;
+  discounts: {
+    quarterly_percentage: number;
+    yearly_percentage: number;
+  };
+  plans: ApiPlanDto[];
+  email_packs: ApiEmailPackDto[];
+  addons: ApiAddonDto[];
+  whatsapp_rate_card: ApiWhatsAppRateDto[];
+  rules: ApiRulesDto;
+}
+
+// Fallback initial data for INR
+const INITIAL_INR_DATA: ApiPricingResponse = {
+  currency: "INR",
+  currency_symbol: "₹",
+  discounts: { quarterly_percentage: 5, yearly_percentage: 10 },
+  plans: [
+    {
+      name: "Free",
+      slug: "free",
+      description: "Try for free. No credit card required",
+      is_custom: false,
+      limits: { users: 1, contacts: 500, domains: 1 },
+      allowances: {
+        emails_per_month: 500,
+        whatsapp_included: {
+          type: "credit",
+          amount: 50.0,
+          currency: "INR",
+          is_one_time: true,
+          validity_days: 90,
+          description: "₹50 one-time credit (expires in 90 days)"
+        }
+      },
+      pricing: {
+        monthly: { payable: 0, effective_monthly: 0, discount_percentage: 0, formatted: "₹0/month" },
+        quarterly: { payable: 0, effective_monthly: 0, discount_percentage: 5, billing_months: 3, formatted: "₹0/quarter (₹0/mo)" },
+        yearly: { payable: 360, effective_monthly: 30, discount_percentage: 10, billing_months: 12, formatted: "₹360/year (₹30/mo)" }
+      }
+    },
+    {
+      name: "Starter",
+      slug: "starter",
+      description: "Start your journey",
+      is_custom: false,
+      limits: { users: 1, contacts: 2500, domains: 1 },
+      allowances: {
+        emails_per_month: 1000,
+        whatsapp_included: {
+          type: "credit",
+          amount: 100.0,
+          currency: "INR",
+          is_one_time: false,
+          description: "₹100/month credit"
+        }
+      },
+      pricing: {
+        monthly: { payable: 1499, effective_monthly: 1499, discount_percentage: 0, formatted: "₹1,499/month" },
+        quarterly: { payable: 4272, effective_monthly: 1424, discount_percentage: 5, billing_months: 3, formatted: "₹4,272/quarter (₹1,424/mo)" },
+        yearly: { payable: 16189.2, effective_monthly: 1349.1, discount_percentage: 10, billing_months: 12, formatted: "₹16,189/year (₹1,349/mo)" }
+      }
+    },
+    {
+      name: "Growth",
+      slug: "growth",
+      description: "Boost your business",
+      is_custom: false,
+      limits: { users: 4, contacts: 10000, domains: 3 },
+      allowances: {
+        emails_per_month: 15000,
+        whatsapp_included: {
+          type: "messages",
+          count: 500,
+          destination: "+91 (India recipients only)",
+          is_one_time: false,
+          description: "500 messages/month (India recipients only)"
+        }
+      },
+      pricing: {
+        monthly: { payable: 3999, effective_monthly: 3999, discount_percentage: 0, formatted: "₹3,999/month" },
+        quarterly: { payable: 11397, effective_monthly: 3799, discount_percentage: 5, billing_months: 3, formatted: "₹11,397/quarter (₹3,799/mo)" },
+        yearly: { payable: 43189.2, effective_monthly: 3599.1, discount_percentage: 10, billing_months: 12, formatted: "₹43,189/year (₹3,599/mo)" }
+      }
+    },
+    {
+      name: "Pro",
+      slug: "pro",
+      description: "Grow your business",
+      is_custom: false,
+      limits: { users: 6, contacts: 50000, domains: 6 },
+      allowances: {
+        emails_per_month: 50000,
+        whatsapp_included: {
+          type: "messages",
+          count: 1000,
+          destination: "+91 (India recipients only)",
+          is_one_time: false,
+          description: "1,000 messages/month (India recipients only)"
+        }
+      },
+      pricing: {
+        monthly: { payable: 7999, effective_monthly: 7999, discount_percentage: 0, formatted: "₹7,999/month" },
+        quarterly: { payable: 22797, effective_monthly: 7599, discount_percentage: 5, billing_months: 3, formatted: "₹22,797/quarter (₹7,599/mo)" },
+        yearly: { payable: 86389.2, effective_monthly: 7199.1, discount_percentage: 10, billing_months: 12, formatted: "₹86,389/year (₹7,199/mo)" }
+      }
+    },
+    {
+      name: "Enterprise",
+      slug: "enterprise",
+      description: "High volume, custom terms",
+      is_custom: true,
+      limits: { users: "unlimited", contacts: "custom", domains: "unlimited" },
+      allowances: {
+        emails_per_month: "custom",
+        whatsapp_included: {
+          type: "custom",
+          is_one_time: false,
+          description: "Custom per contract"
+        }
+      },
+      pricing: { is_custom: true, contact_sales: true, monthly: null, quarterly: null, yearly: null }
+    }
+  ],
+  email_packs: [
+    { credits: 10000, price: 1200.0, currency: "INR", formatted_price: "₹1,200", validity_months: 12 },
+    { credits: 50000, price: 5000.0, currency: "INR", formatted_price: "₹5,000", validity_months: 12 },
+    { credits: 100000, price: 8000.0, currency: "INR", formatted_price: "₹8,000", validity_months: 12 },
+    { credits: 500000, price: 30000.0, currency: "INR", formatted_price: "₹30,000", validity_months: 12 }
+  ],
+  addons: [
+    { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 500.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹500" },
+    { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
+    { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 999.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "₹999" },
+    { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 4000.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹4,000" },
+    { addon_key: "EMAIL_VERIFICATION", name: "Email Verification", description: "Verify email addresses before sending", price: 0.1, currency: "INR", billing_interval: "MONTHLY", unit: "per check", applicable_plan: null, formatted_price: "₹0.10" }
+  ],
+  whatsapp_rate_card: [
+    { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.85, currency: "INR", description: "WhatsApp Marketing conversation" },
+    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Utility message" },
+    { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Authentication OTP" },
+    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Service conversation" }
+  ],
+  rules: {
+    free_service_messages_monthly: 1000,
+    inbound_messages_free: true,
+    email_pack_validity_months: 12,
+    free_whatsapp_bonus_validity_days: 90
+  }
+};
+
+// Fallback initial data for USD
+const INITIAL_USD_DATA: ApiPricingResponse = {
+  currency: "USD",
+  currency_symbol: "$",
+  discounts: { quarterly_percentage: 5, yearly_percentage: 10 },
+  plans: [
+    {
+      name: "Free",
+      slug: "free",
+      description: "Try for free. No credit card required",
+      is_custom: false,
+      limits: { users: 1, contacts: 500, domains: 1 },
+      allowances: {
+        emails_per_month: 500,
+        whatsapp_included: {
+          type: "credit",
+          amount: 1.0,
+          currency: "USD",
+          is_one_time: true,
+          validity_days: 90,
+          description: "$1 one-time credit (expires in 90 days)"
+        }
+      },
+      pricing: {
+        monthly: { payable: 0, effective_monthly: 0, discount_percentage: 0, formatted: "$0/month" },
+        quarterly: { payable: 0, effective_monthly: 0, discount_percentage: 5, billing_months: 3, formatted: "$0/quarter ($0/mo)" },
+        yearly: { payable: 0, effective_monthly: 0, discount_percentage: 10, billing_months: 12, formatted: "$0/year ($0/mo)" }
+      }
+    },
+    {
+      name: "Starter",
+      slug: "starter",
+      description: "Start your journey",
+      is_custom: false,
+      limits: { users: 1, contacts: 2500, domains: 1 },
+      allowances: {
+        emails_per_month: 1000,
+        whatsapp_included: {
+          type: "credit",
+          amount: 2.0,
+          currency: "USD",
+          is_one_time: false,
+          description: "$2/month credit"
+        }
+      },
+      pricing: {
+        monthly: { payable: 45, effective_monthly: 45, discount_percentage: 0, formatted: "$45/month" },
+        quarterly: { payable: 129, effective_monthly: 43, discount_percentage: 5, billing_months: 3, formatted: "$129/quarter ($43/mo)" },
+        yearly: { payable: 492, effective_monthly: 41, discount_percentage: 10, billing_months: 12, formatted: "$492/year ($41/mo)" }
+      }
+    },
+    {
+      name: "Growth",
+      slug: "growth",
+      description: "Boost your business",
+      is_custom: false,
+      limits: { users: 4, contacts: 10000, domains: 3 },
+      allowances: {
+        emails_per_month: 15000,
+        whatsapp_included: {
+          type: "credit",
+          amount: 10.0,
+          currency: "USD",
+          is_one_time: false,
+          description: "$10/month credit"
+        }
+      },
+      pricing: {
+        monthly: { payable: 99, effective_monthly: 99, discount_percentage: 0, formatted: "$99/month" },
+        quarterly: { payable: 282, effective_monthly: 94, discount_percentage: 5, billing_months: 3, formatted: "$282/quarter ($94/mo)" },
+        yearly: { payable: 1068, effective_monthly: 89, discount_percentage: 10, billing_months: 12, formatted: "$1,068/year ($89/mo)" }
+      }
+    },
+    {
+      name: "Pro",
+      slug: "pro",
+      description: "Grow your business",
+      is_custom: false,
+      limits: { users: 6, contacts: 50000, domains: 6 },
+      allowances: {
+        emails_per_month: 50000,
+        whatsapp_included: {
+          type: "credit",
+          amount: 20.0,
+          currency: "USD",
+          is_one_time: false,
+          description: "$20/month credit"
+        }
+      },
+      pricing: {
+        monthly: { payable: 299, effective_monthly: 299, discount_percentage: 0, formatted: "$299/month" },
+        quarterly: { payable: 852, effective_monthly: 284, discount_percentage: 5, billing_months: 3, formatted: "$852/quarter ($284/mo)" },
+        yearly: { payable: 3228, effective_monthly: 269, discount_percentage: 10, billing_months: 12, formatted: "$3,228/year ($269/mo)" }
+      }
+    },
+    {
+      name: "Enterprise",
+      slug: "enterprise",
+      description: "High volume, custom terms",
+      is_custom: true,
+      limits: { users: "unlimited", contacts: "custom", domains: "unlimited" },
+      allowances: {
+        emails_per_month: "custom",
+        whatsapp_included: {
+          type: "custom",
+          is_one_time: false,
+          description: "Custom per contract"
+        }
+      },
+      pricing: { is_custom: true, contact_sales: true, monthly: null, quarterly: null, yearly: null }
+    }
+  ],
+  email_packs: [
+    { credits: 10000, price: 20.0, currency: "USD", formatted_price: "$20", validity_months: 12 },
+    { credits: 50000, price: 80.0, currency: "USD", formatted_price: "$80", validity_months: 12 },
+    { credits: 100000, price: 120.0, currency: "USD", formatted_price: "$120", validity_months: 12 },
+    { credits: 500000, price: 450.0, currency: "USD", formatted_price: "$450", validity_months: 12 }
+  ],
+  addons: [
+    { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 10.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$10" },
+    { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 8.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$8" },
+    { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 25.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "$25" },
+    { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 60.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$60" },
+    { addon_key: "EMAIL_VERIFICATION", name: "Email Verification", description: "Verify email addresses before sending", price: 0.0, currency: "USD", billing_interval: "MONTHLY", unit: "per check", applicable_plan: null, formatted_price: "$0.00" }
+  ],
+  whatsapp_rate_card: [
+    { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.01, currency: "USD", description: "WhatsApp Marketing conversation" },
+    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Utility message" },
+    { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Authentication OTP" },
+    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.0047, currency: "USD", description: "WhatsApp Service conversation" }
+  ],
+  rules: {
+    free_service_messages_monthly: 1000,
+    inbound_messages_free: true,
+    email_pack_validity_months: 12,
+    free_whatsapp_bonus_validity_days: 90
+  }
+};
 
 export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const { navigate } = useRouter();
@@ -62,7 +422,13 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     return 'USD';
   });
 
-  // State
+  // API State
+  const [apiData, setApiData] = useState<ApiPricingResponse>(() => 
+    currency === 'USD' ? INITIAL_USD_DATA : INITIAL_INR_DATA
+  );
+  const [isLoadingApi, setIsLoadingApi] = useState<boolean>(false);
+
+  // User Interactive State
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
   const [selectedCalcPlan, setSelectedCalcPlan] = useState<CalcPlanId>('growth');
   const [emails, setEmails] = useState<number>(50000);
@@ -74,40 +440,41 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const [highlightedPlan, setHighlightedPlan] = useState<PlanId | null>(null);
   const [highlightedCalc, setHighlightedCalc] = useState<boolean>(false);
 
-  // Discounts
-  const quarterlyDiscount = 0.05; // 5% off
-  const yearlyDiscount = 0.10;    // 10% off
+  // Fetch Pricing Data from API: https://api.sit.onedigilta.in/api/pricing
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchPricing = async () => {
+      setIsLoadingApi(true);
+      try {
+        const url = `https://api.sit.onedigilta.in/api/pricing?currency=${currency}`;
+        const response = await fetch(url, { signal: controller.signal });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.plans && Array.isArray(data.plans)) {
+            setApiData(data);
+          }
+        }
+      } catch (err) {
+        // Silently keep using fallback data if blocked or offline
+      } finally {
+        setIsLoadingApi(false);
+      }
+    };
 
-  // Rates in INR & USD
-  const waMarketingRate = currency === 'USD' ? 0.012 : 0.98;   // $0.012 vs 98 paisa
-  const waUtilityRate = currency === 'USD' ? 0.003 : 0.25;     // $0.003 vs 25 paisa
+    fetchPricing();
+    return () => controller.abort();
+  }, [currency]);
 
-  // Base monthly platform prices
-  const monthlyPricesINR: Record<PlanId, number> = {
-    free: 0,
-    starter: 1499,
-    growth: 3999,
-    pro: 7999,
-    enterprise: 0,
-  };
+  // Read rates from API response
+  const waMarketingRate = useMemo(() => {
+    const item = apiData.whatsapp_rate_card.find(r => r.category === 'marketing' || r.feature_type === 'WHATSAPP_MARKETING');
+    return item ? item.rate_per_message : (currency === 'USD' ? 0.01 : 0.85);
+  }, [apiData, currency]);
 
-  const monthlyPricesUSD: Record<PlanId, number> = {
-    free: 0,
-    starter: 45,
-    growth: 99,
-    pro: 299,
-    enterprise: 0,
-  };
-
-  const monthlyPrices = currency === 'USD' ? monthlyPricesUSD : monthlyPricesINR;
-
-  // Included volume specs
-  const includedEmailsMap: Record<CalcPlanId, number> = {
-    free: 500,       // 500 emails/month
-    starter: 1000,   // 1,000 emails/month
-    growth: 15000,   // 15,000 emails/month
-    pro: 50000,      // 50,000 emails/month
-  };
+  const waUtilityRate = useMemo(() => {
+    const item = apiData.whatsapp_rate_card.find(r => r.category === 'utility' || r.feature_type === 'WHATSAPP_UTILITY');
+    return item ? item.rate_per_message : (currency === 'USD' ? 0.0047 : 0.40);
+  }, [apiData, currency]);
 
   // Helper formatters
   const money = (n: number) => {
@@ -126,30 +493,88 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
   const num = (n: number) => n.toLocaleString(currency === 'USD' ? 'en-US' : 'en-IN');
 
-  const getPlanFee = (id: PlanId) => {
-    const base = monthlyPrices[id];
-    if (base === 0) return 0;
-    if (billingInterval === 'yearly') {
-      return Math.round(base * (1 - yearlyDiscount));
+  // Plan Price lookup from API response
+  const getPlanPricing = (slug: PlanId) => {
+    const plan = apiData.plans.find(p => p.slug === slug);
+    if (!plan || plan.is_custom || !plan.pricing) {
+      return { price: 'Custom', unit: 'Volume-based pricing', payable: 0, effectiveMonthly: 0 };
     }
+
+    if (slug === 'free') {
+      return { price: currency === 'USD' ? '$0' : '₹0', unit: 'Free forever', payable: 0, effectiveMonthly: 0 };
+    }
+
+    const tier = billingInterval === 'yearly' 
+      ? plan.pricing.yearly 
+      : billingInterval === 'quarterly' 
+        ? plan.pricing.quarterly 
+        : plan.pricing.monthly;
+
+    if (!tier) {
+      return { price: 'Custom', unit: 'Volume-based pricing', payable: 0, effectiveMonthly: 0 };
+    }
+
+    const effectiveMonthly = tier.effective_monthly;
+    const payable = tier.payable;
+    const priceFormatted = money(effectiveMonthly);
+    const taxSuffix = currency === 'INR' ? ' + GST' : '';
+
+    let unit = `per month${taxSuffix}`;
     if (billingInterval === 'quarterly') {
-      return Math.round(base * (1 - quarterlyDiscount));
+      unit = `per month, billed quarterly (${money(payable)})${taxSuffix}`;
+    } else if (billingInterval === 'yearly') {
+      unit = `per month, billed yearly (${money(payable)})${taxSuffix}`;
     }
-    return base;
+
+    return { price: priceFormatted, unit, payable, effectiveMonthly };
   };
 
-  const getUnitFor = (id: PlanId) => {
-    if (id === 'enterprise') return 'Volume-based pricing';
-    if (id === 'free') return 'Free forever';
-    const fee = getPlanFee(id);
-    const taxSuffix = currency === 'INR' ? ' + GST' : '';
-    if (billingInterval === 'yearly') {
-      return `per month, billed yearly (${money(fee * 12)})${taxSuffix}`;
+  // Allowances lookup from API response
+  const getIncludedEmails = (slug: CalcPlanId): number => {
+    const plan = apiData.plans.find(p => p.slug === slug);
+    if (plan && typeof plan.allowances.emails_per_month === 'number') {
+      return plan.allowances.emails_per_month;
     }
-    if (billingInterval === 'quarterly') {
-      return `per month, billed quarterly (${money(fee * 3)})${taxSuffix}`;
+    return slug === 'free' ? 500 : slug === 'starter' ? 1000 : slug === 'growth' ? 15000 : 50000;
+  };
+
+  // Plan Features List builder
+  const getPlanFeatures = (plan: ApiPlanDto): string[] => {
+    const features: string[] = [];
+    const emailsCount = typeof plan.allowances.emails_per_month === 'number' 
+      ? `${num(plan.allowances.emails_per_month)} emails/month included` 
+      : 'Custom email quota';
+    features.push(emailsCount);
+
+    if (plan.allowances.whatsapp_included.description) {
+      features.push(plan.allowances.whatsapp_included.description);
     }
-    return `per month${taxSuffix}`;
+
+    if (typeof plan.limits.contacts === 'number') {
+      features.push(`${num(plan.limits.contacts)} contacts`);
+    } else {
+      features.push('Custom contact limits');
+    }
+
+    if (typeof plan.limits.users === 'number') {
+      features.push(`${plan.limits.users} user${plan.limits.users > 1 ? 's' : ''}`);
+    } else {
+      features.push('Unlimited users');
+    }
+
+    if (plan.slug === 'free') {
+      features.push('Email & WhatsApp campaigns', 'Shared WhatsApp inbox', '1 signup form');
+    } else if (plan.slug === 'starter') {
+      features.push('Everything in Free', 'Basic segments & reports', '1 drip sequence', '1 chatbot');
+    } else if (plan.slug === 'growth') {
+      features.push('Everything in Starter', '5 cross-channel workflows', '10 drip sequences, 5 chatbots', 'Commerce: products, inventory, orders', 'API access');
+    } else if (plan.slug === 'pro') {
+      features.push('Everything in Growth', 'Ads Manager & lead forms', 'Unlimited workflows & chatbots', 'Priority support');
+    } else if (plan.slug === 'enterprise') {
+      features.push('Negotiated WhatsApp rates', 'Dedicated account manager', 'Custom onboarding & SLA');
+    }
+
+    return features;
   };
 
   // Handle URL deep linking (e.g. ?plan=growth&emails=60000&mkt=8000&util=3000&billing=quarterly&currency=USD#calculator)
@@ -255,131 +680,45 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     }
   };
 
-  // Plan definitions
-  const planDefs: PlanDef[] = [
-    {
-      id: 'free',
-      name: 'Free',
-      tagline: 'Try both channels with a small list.',
-      cta: 'Start free',
-      features: [
-        '500 emails/month included',
-        currency === 'USD' ? '$1 WhatsApp credit on sign-up' : '₹50 WhatsApp credit on sign-up',
-        '500 contacts',
-        '1 user',
-        'Email & WhatsApp campaigns',
-        'Shared WhatsApp inbox',
-        '1 signup form'
-      ]
-    },
-    {
-      id: 'starter',
-      name: 'Starter',
-      tagline: 'Regular campaigns for a growing list.',
-      cta: 'Choose Starter',
-      features: [
-        '1,000 emails/month included',
-        currency === 'USD' ? '$2 WhatsApp credit/month' : '₹100 WhatsApp credit/month',
-        '2,500 contacts',
-        '1 user',
-        'Everything in Free',
-        'Basic segments & reports',
-        '1 drip sequence',
-        '1 chatbot'
-      ]
-    },
-    {
-      id: 'growth',
-      name: 'Growth',
-      tagline: 'Automate email and WhatsApp together.',
-      cta: 'Choose Growth',
-      featured: true,
-      features: [
-        '15,000 emails/month included',
-        '500 WhatsApp messages/month included',
-        '10,000 contacts',
-        '4 users',
-        'Everything in Starter',
-        '5 cross-channel workflows',
-        '10 drip sequences, 5 chatbots',
-        'Commerce: products, inventory, orders',
-        'API access'
-      ]
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      tagline: 'Leads, ads and unlimited automation.',
-      cta: 'Choose Pro',
-      features: [
-        '50,000 emails/month included',
-        '1,000 WhatsApp messages/month included',
-        '50,000 contacts',
-        '6 users',
-        'Everything in Growth',
-        'Ads Manager & lead forms',
-        'Unlimited workflows & chatbots',
-        'Priority support'
-      ]
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      tagline: 'High volume, custom terms.',
-      cta: 'Talk to sales',
-      features: [
-        'Custom email & WhatsApp credits',
-        'Custom contact limits',
-        'Negotiated WhatsApp rates',
-        'Unlimited users',
-        'Dedicated account manager',
-        'Custom onboarding & SLA'
-      ]
-    }
-  ];
-
   // Calculator calculations
-  const incEmails = includedEmailsMap[selectedCalcPlan];
+  const incEmails = getIncludedEmails(selectedCalcPlan);
   const billableEmails = Math.max(0, emails - incEmails);
 
   // Email tier rates
   const emailTierRate = currency === 'USD'
-    ? (billableEmails <= 10000 ? 0.0015 : billableEmails <= 50000 ? 0.0012 : billableEmails <= 100000 ? 0.0010 : 0.00076)
+    ? (billableEmails <= 10000 ? 0.0020 : billableEmails <= 50000 ? 0.0016 : billableEmails <= 100000 ? 0.0012 : 0.0009)
     : (billableEmails <= 10000 ? 0.12 : billableEmails <= 50000 ? 0.10 : billableEmails <= 100000 ? 0.08 : 0.06);
 
-  const platformCost = getPlanFee(selectedCalcPlan);
+  const currentPlanPricing = getPlanPricing(selectedCalcPlan);
+  const platformCost = currentPlanPricing.effectiveMonthly;
   const emailCost = billableEmails * emailTierRate;
   const mktCost = mkt * waMarketingRate;
   const utilCost = util * waUtilityRate;
   const totalWaCost = mktCost + utilCost;
 
-  // WhatsApp Credit / Message allowance calculation
+  // WhatsApp Credit / Message allowance calculation based on API
   let waIncludedValue = 0;
   let waAllowanceText = '';
 
-  if (selectedCalcPlan === 'growth') {
-    const coveredMkt = Math.min(mkt, 500);
-    const remainingAfterMkt = 500 - coveredMkt;
+  const activeCalcPlanDto = apiData.plans.find(p => p.slug === selectedCalcPlan);
+  const waIncludedInfo = activeCalcPlanDto?.allowances.whatsapp_included;
+
+  if (waIncludedInfo?.type === 'messages' && waIncludedInfo.count) {
+    const coveredMkt = Math.min(mkt, waIncludedInfo.count);
+    const remainingAfterMkt = waIncludedInfo.count - coveredMkt;
     const coveredUtil = Math.min(util, remainingAfterMkt);
     waIncludedValue = Math.min((coveredMkt * waMarketingRate) + (coveredUtil * waUtilityRate), totalWaCost);
-    waAllowanceText = '500 messages included';
-  } else if (selectedCalcPlan === 'pro') {
-    const coveredMkt = Math.min(mkt, 1000);
-    const remainingAfterMkt = 1000 - coveredMkt;
-    const coveredUtil = Math.min(util, remainingAfterMkt);
-    waIncludedValue = Math.min((coveredMkt * waMarketingRate) + (coveredUtil * waUtilityRate), totalWaCost);
-    waAllowanceText = '1,000 messages included';
-  } else if (selectedCalcPlan === 'starter') {
-    const starterCredit = currency === 'USD' ? 2 : 100;
-    waIncludedValue = Math.min(starterCredit, totalWaCost);
-    waAllowanceText = currency === 'USD' ? '$2 credit' : '₹100 credit';
+    waAllowanceText = `${num(waIncludedInfo.count)} messages included`;
+  } else if (waIncludedInfo?.type === 'credit' && waIncludedInfo.amount) {
+    waIncludedValue = Math.min(waIncludedInfo.amount, totalWaCost);
+    waAllowanceText = `${apiData.currency_symbol}${waIncludedInfo.amount} credit`;
   } else {
     waIncludedValue = 0;
-    waAllowanceText = currency === 'USD' ? '$0' : '₹0';
+    waAllowanceText = `${apiData.currency_symbol}0`;
   }
 
   const subtotal = platformCost + emailCost + mktCost + utilCost - waIncludedValue;
-  const taxRate = currency === 'INR' ? 0.18 : 0; // 18% GST for INR, $0 local tax preview for USD
+  const taxRate = currency === 'INR' ? 0.18 : 0; // 18% GST for INR
   const taxAmount = subtotal * taxRate;
   const grandTotal = subtotal + taxAmount;
 
@@ -391,19 +730,19 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
   const faqs = [
     {
       question: 'What does the platform fee cover?',
-      answer: 'The features in your plan, your team seats (1 user on Free & Starter, 4 on Growth, 6 on Pro, unlimited on Enterprise) and your contact limit. Sending emails and WhatsApp messages is paid from your email credits and WhatsApp wallet.'
+      answer: 'The features in your plan, your team seats, verified domains, and your contact limit. Sending emails and WhatsApp messages is paid from your email credits and WhatsApp wallet.'
     },
     {
       question: 'Why is WhatsApp billed separately?',
-      answer: `Meta charges for every delivered WhatsApp message at official direct rates (${currency === 'USD' ? '$0.012 for Marketing, $0.003 for Utility/Auth' : '98p for Marketing, 25p for Utility/Authentication/Service'}). Growth includes 500 WhatsApp messages/mo and Pro includes 1,000 messages/mo. Any extra volume draws transparently from your prepaid wallet.`
+      answer: `WhatsApp messages are charged at official Meta rates (${currency === 'USD' ? `$${waMarketingRate} for Marketing, $${waUtilityRate} for Utility/Auth` : `₹${waMarketingRate} (85p) for Marketing, ₹${waUtilityRate} (40p) for Utility/Authentication`}). Growth includes 500 WhatsApp messages/mo and Pro includes 1,000 messages/mo. Any extra volume draws transparently from your prepaid wallet.`
     },
     {
       question: 'How do the quarterly and yearly discounts work?',
-      answer: 'Quarterly billing saves you 5% every 3 months. Yearly billing saves you 10% annually. You can switch between billing intervals at any time.'
+      answer: `Quarterly billing saves you ${apiData.discounts.quarterly_percentage}% every 3 months. Yearly billing saves you ${apiData.discounts.yearly_percentage}% annually. You can switch between billing intervals at any time.`
     },
     {
       question: 'Do email credits expire?',
-      answer: 'Purchased email credits stay valid for 12 months. Your plan’s included monthly emails and WhatsApp message quotas reset on the 1st of each month and do not roll over.'
+      answer: `Purchased email credit packs stay valid for ${apiData.rules.email_pack_validity_months} months. Your plan’s included monthly emails and WhatsApp message quotas reset on the 1st of each month.`
     },
     {
       question: 'What happens if my wallet runs out?',
@@ -493,6 +832,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-violet-50 border border-violet-200/80 rounded-full text-violet-700 text-xs font-semibold tracking-wider uppercase">
           <Percent className="w-3 h-3" />
           <span>Simple, Transparent Pricing</span>
+          {isLoadingApi && <Loader2 className="w-3 h-3 animate-spin ml-1 text-violet-500" />}
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 max-w-4xl leading-[1.1]">
@@ -570,7 +910,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             >
               <span>Quarterly</span>
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                -5%
+                -{apiData.discounts.quarterly_percentage}%
               </span>
             </button>
 
@@ -587,7 +927,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
             >
               <span>Yearly</span>
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800">
-                -10%
+                -{apiData.discounts.yearly_percentage}%
               </span>
             </button>
           </div>
@@ -596,27 +936,23 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
         {/* Currency notice for clarity */}
         <p className="text-xs text-zinc-400">
-          {currency === 'USD' ? 'Showing international pricing in USD ($)' : 'Showing domestic pricing in INR (₹) + GST'}
+          {currency === 'USD' ? 'Showing live international pricing in USD ($)' : 'Showing live domestic pricing in INR (₹) + GST'}
         </p>
       </section>
 
       {/* Plans Section */}
       <section id="plans" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 items-stretch">
-          {planDefs.map((plan) => {
-            const isFeatured = !!plan.featured;
-            const isHighlighted = highlightedPlan === plan.id;
-            const price = plan.id === 'enterprise' 
-              ? 'Custom' 
-              : plan.id === 'free' 
-                ? (currency === 'USD' ? '$0' : '₹0')
-                : money(getPlanFee(plan.id));
-            const unit = getUnitFor(plan.id);
+          {apiData.plans.map((plan) => {
+            const isFeatured = plan.slug === 'growth';
+            const isHighlighted = highlightedPlan === plan.slug;
+            const pricing = getPlanPricing(plan.slug);
+            const features = getPlanFeatures(plan);
 
             return (
               <article 
-                id={`plan-${plan.id}`}
-                key={plan.id}
+                id={`plan-${plan.slug}`}
+                key={plan.slug}
                 className={`relative bg-white rounded-2xl p-6 flex flex-col justify-between gap-5 transition-all duration-300 ${
                   isHighlighted 
                     ? 'ring-4 ring-violet-500 shadow-2xl scale-[1.02]' 
@@ -636,18 +972,18 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
                       <h2 className="text-xl font-bold text-zinc-900">{plan.name}</h2>
-                      <p className="text-xs text-zinc-600 min-h-[36px] leading-relaxed">{plan.tagline}</p>
+                      <p className="text-xs text-zinc-600 min-h-[36px] leading-relaxed">{plan.description}</p>
                     </div>
                     
                     {/* Share / Copy Link Button */}
                     <button
                       type="button"
-                      onClick={(e) => copyPlanLink(e, plan.id)}
+                      onClick={(e) => copyPlanLink(e, plan.slug)}
                       className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-700 hover:bg-violet-50 transition-colors cursor-pointer border border-zinc-100 shrink-0"
                       title={`Copy direct link to ${plan.name} plan (${currency})`}
                       aria-label={`Copy direct link to ${plan.name} plan`}
                     >
-                      {copiedPlanId === plan.id ? (
+                      {copiedPlanId === plan.slug ? (
                         <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                       ) : (
                         <Share2 className="w-4 h-4" />
@@ -656,7 +992,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                   </div>
 
                   {/* Toast indicator on copy */}
-                  {copiedPlanId === plan.id && (
+                  {copiedPlanId === plan.slug && (
                     <div className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-1 px-2.5 flex items-center gap-1.5 animate-fadeIn">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       <span>{currency} link copied!</span>
@@ -665,30 +1001,30 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
                   <div className="space-y-1 pt-2 border-t border-zinc-100">
                     <div className="text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight">
-                      {price}
+                      {pricing.price}
                     </div>
                     <div className="text-xs text-zinc-500 min-h-[32px] leading-tight">
-                      {unit}
+                      {pricing.unit}
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => handleCtaClick(plan.id)}
+                    onClick={() => handleCtaClick(plan.slug)}
                     className={`w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       isFeatured 
                         ? 'bg-violet-700 hover:bg-violet-800 text-white shadow-md shadow-violet-200' 
                         : 'bg-white hover:bg-zinc-50 text-zinc-900 border border-zinc-300'
                     }`}
                   >
-                    <span>{plan.cta}</span>
+                    <span>{plan.slug === 'enterprise' ? 'Talk to sales' : plan.slug === 'free' ? 'Start free' : `Choose ${plan.name}`}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
                   <div className="pt-2">
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Included features:</div>
                     <ul className="space-y-2.5 text-xs text-zinc-700">
-                      {plan.features.map((feat, idx) => (
+                      {features.map((feat, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5 stroke-[2.5]" />
                           <span className="leading-tight">{feat}</span>
@@ -700,14 +1036,14 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
 
                 {/* Bottom Copy Link Text */}
                 <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-400">
-                  <span className="font-mono">ID: {plan.id}</span>
+                  <span className="font-mono">ID: {plan.slug}</span>
                   <button
                     type="button"
-                    onClick={(e) => copyPlanLink(e, plan.id)}
+                    onClick={(e) => copyPlanLink(e, plan.slug)}
                     className="hover:text-violet-700 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <LinkIcon className="w-3 h-3" />
-                    <span>{copiedPlanId === plan.id ? 'Copied' : `Share (${currency})`}</span>
+                    <span>{copiedPlanId === plan.slug ? 'Copied' : `Share (${currency})`}</span>
                   </button>
                 </div>
 
@@ -744,7 +1080,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <h3 className="text-lg font-bold text-zinc-900">Email credits</h3>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Every plan includes emails each month (500 on Free, 1,000 on Starter, 15,000 on Growth, 50,000 on Pro). Need more? 1 credit sends 1 email, and purchased credits stay valid for 12 months.
+                Every plan includes monthly emails (500 Free, 1,000 Starter, 15,000 Growth, 50,000 Pro). Purchased credits remain valid for {apiData.rules.email_pack_validity_months} months.
               </p>
               
               <div className="overflow-x-auto mt-2">
@@ -757,21 +1093,17 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    {currency === 'USD' ? (
-                      <>
-                        <tr><td className="py-2.5">10,000</td><td className="py-2.5 text-right font-semibold">$15</td><td className="py-2.5 text-right text-zinc-500">$0.0015</td></tr>
-                        <tr><td className="py-2.5">50,000</td><td className="py-2.5 text-right font-semibold">$60</td><td className="py-2.5 text-right text-zinc-500">$0.0012</td></tr>
-                        <tr><td className="py-2.5">1,00,000</td><td className="py-2.5 text-right font-semibold">$100</td><td className="py-2.5 text-right text-zinc-500">$0.0010</td></tr>
-                        <tr><td className="py-2.5">5,00,000</td><td className="py-2.5 text-right font-semibold">$380</td><td className="py-2.5 text-right text-zinc-500">$0.00076</td></tr>
-                      </>
-                    ) : (
-                      <>
-                        <tr><td className="py-2.5">10,000</td><td className="py-2.5 text-right font-semibold">₹1,200</td><td className="py-2.5 text-right text-zinc-500">₹0.12</td></tr>
-                        <tr><td className="py-2.5">50,000</td><td className="py-2.5 text-right font-semibold">₹5,000</td><td className="py-2.5 text-right text-zinc-500">₹0.10</td></tr>
-                        <tr><td className="py-2.5">1,00,000</td><td className="py-2.5 text-right font-semibold">₹8,000</td><td className="py-2.5 text-right text-zinc-500">₹0.08</td></tr>
-                        <tr><td className="py-2.5">5,00,000</td><td className="py-2.5 text-right font-semibold">₹30,000</td><td className="py-2.5 text-right text-zinc-500">₹0.06</td></tr>
-                      </>
-                    )}
+                    {apiData.email_packs.map((pack) => {
+                      const perEmailRate = pack.price / pack.credits;
+                      const formattedRate = currency === 'USD' ? `$${perEmailRate.toFixed(4)}` : `₹${perEmailRate.toFixed(2)}`;
+                      return (
+                        <tr key={pack.credits}>
+                          <td className="py-2.5">{num(pack.credits)}</td>
+                          <td className="py-2.5 text-right font-semibold">{pack.formatted_price}</td>
+                          <td className="py-2.5 text-right text-zinc-500">{formattedRate}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -786,7 +1118,7 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <h3 className="text-lg font-bold text-zinc-900">WhatsApp messages</h3>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Official Meta direct rates {currency === 'USD' ? 'in USD' : '(98p for Marketing, 25p for Utility/Authentication/Service)'}. Top up any amount into your wallet.
+                Official Meta direct rates in {currency}. Top up any amount into your wallet, whenever you need.
               </p>
 
               <div className="overflow-x-auto mt-2">
@@ -798,21 +1130,22 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    {currency === 'USD' ? (
-                      <>
-                        <tr><td className="py-2.5">Marketing</td><td className="py-2.5 text-right font-semibold">$0.012</td></tr>
-                        <tr><td className="py-2.5">Utility &amp; Authentication</td><td className="py-2.5 text-right font-semibold">$0.003</td></tr>
-                        <tr><td className="py-2.5">Service replies (after 1,000 free/mo)</td><td className="py-2.5 text-right font-semibold">$0.003</td></tr>
-                        <tr><td className="py-2.5">Incoming customer messages</td><td className="py-2.5 text-right font-semibold text-emerald-600">Free</td></tr>
-                      </>
-                    ) : (
-                      <>
-                        <tr><td className="py-2.5">Marketing</td><td className="py-2.5 text-right font-semibold">₹0.98 <span className="text-[10px] text-zinc-500 font-normal">(98p)</span></td></tr>
-                        <tr><td className="py-2.5">Utility &amp; Authentication</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
-                        <tr><td className="py-2.5">Service replies (after 1,000 free/mo)</td><td className="py-2.5 text-right font-semibold">₹0.25 <span className="text-[10px] text-zinc-500 font-normal">(25p)</span></td></tr>
-                        <tr><td className="py-2.5">Incoming customer messages</td><td className="py-2.5 text-right font-semibold text-emerald-600">Free</td></tr>
-                      </>
-                    )}
+                    {apiData.whatsapp_rate_card.map((rate) => {
+                      const label = rate.category.charAt(0).toUpperCase() + rate.category.slice(1);
+                      const displayRate = currency === 'USD' 
+                        ? `$${rate.rate_per_message}` 
+                        : `₹${rate.rate_per_message.toFixed(2)}`;
+                      return (
+                        <tr key={rate.feature_type}>
+                          <td className="py-2.5">{label}</td>
+                          <td className="py-2.5 text-right font-semibold">{displayRate}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr>
+                      <td className="py-2.5">Incoming customer messages</td>
+                      <td className="py-2.5 text-right font-semibold text-emerald-600">Free</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -833,23 +1166,12 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               <div className="overflow-x-auto mt-2">
                 <table className="w-full text-xs">
                   <tbody className="divide-y divide-zinc-200/60">
-                    {currency === 'USD' ? (
-                      <>
-                        <tr><td className="py-2.5">Extra 10,000 contacts</td><td className="py-2.5 text-right font-semibold">$10/mo</td></tr>
-                        <tr><td className="py-2.5">Extra user</td><td className="py-2.5 text-right font-semibold">$5/mo</td></tr>
-                        <tr><td className="py-2.5">Ads Manager on Growth</td><td className="py-2.5 text-right font-semibold">$15/mo</td></tr>
-                        <tr><td className="py-2.5">Dedicated sending IP</td><td className="py-2.5 text-right font-semibold">$50/mo</td></tr>
-                        <tr><td className="py-2.5">Email verification</td><td className="py-2.5 text-right font-semibold text-zinc-500">Pay per check</td></tr>
-                      </>
-                    ) : (
-                      <>
-                        <tr><td className="py-2.5">Extra 10,000 contacts</td><td className="py-2.5 text-right font-semibold">₹500/mo</td></tr>
-                        <tr><td className="py-2.5">Extra user</td><td className="py-2.5 text-right font-semibold">₹300/mo</td></tr>
-                        <tr><td className="py-2.5">Ads Manager on Growth</td><td className="py-2.5 text-right font-semibold">₹999/mo</td></tr>
-                        <tr><td className="py-2.5">Dedicated sending IP</td><td className="py-2.5 text-right font-semibold">₹4,000/mo</td></tr>
-                        <tr><td className="py-2.5">Email verification</td><td className="py-2.5 text-right font-semibold text-zinc-500">Pay per check</td></tr>
-                      </>
-                    )}
+                    {apiData.addons.map((addon) => (
+                      <tr key={addon.addon_key}>
+                        <td className="py-2.5">{addon.name}</td>
+                        <td className="py-2.5 text-right font-semibold">{addon.formatted_price}/{addon.unit === 'per check' ? 'chk' : 'mo'}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -1016,9 +1338,9 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 font-mono">
                     {currency} · {billingInterval === 'yearly' 
-                      ? 'Yearly (-10%)' 
+                      ? `Yearly (-${apiData.discounts.yearly_percentage}%)` 
                       : billingInterval === 'quarterly' 
-                        ? 'Quarterly (-5%)' 
+                        ? `Quarterly (-${apiData.discounts.quarterly_percentage}%)` 
                         : 'Monthly'}
                   </span>
                   <button
@@ -1178,11 +1500,19 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                 <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
-                <td className="py-3 px-5 font-medium text-zinc-800">WhatsApp messages / credit included</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{currency === 'USD' ? '$1 on sign-up' : '₹50 on sign-up'}</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{currency === 'USD' ? '$2/month' : '₹100/month'}</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">500 messages/mo</td>
-                <td className="py-3 px-3 text-center text-zinc-600">1,000 messages/mo</td>
+                <td className="py-3 px-5 font-medium text-zinc-800">WhatsApp included</td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {apiData.plans.find(p => p.slug === 'free')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$1 on sign-up' : '₹50 on sign-up')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {apiData.plans.find(p => p.slug === 'starter')?.allowances.whatsapp_included.description || (currency === 'USD' ? '$2/month' : '₹100/month')}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">
+                  {apiData.plans.find(p => p.slug === 'growth')?.allowances.whatsapp_included.description || '500 messages/mo'}
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600">
+                  {apiData.plans.find(p => p.slug === 'pro')?.allowances.whatsapp_included.description || '1,000 messages/mo'}
+                </td>
                 <td className="py-3 px-3 text-center text-zinc-600">Custom</td>
               </tr>
             </tbody>
@@ -1269,11 +1599,11 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Email Verifier</td>
-                <td className="py-3 px-3 text-center text-zinc-500">Pay per use</td>
-                <td className="py-3 px-3 text-center text-zinc-500">Pay per use</td>
-                <td className="py-3 px-3 text-center text-zinc-700 font-medium bg-violet-50/20">Pay per use</td>
-                <td className="py-3 px-3 text-center text-zinc-500">Pay per use</td>
-                <td className="py-3 px-3 text-center text-zinc-500">Pay per use</td>
+                <td className="py-3 px-3 text-center text-zinc-500">Pay per check</td>
+                <td className="py-3 px-3 text-center text-zinc-500">Pay per check</td>
+                <td className="py-3 px-3 text-center text-zinc-700 font-medium bg-violet-50/20">Pay per check</td>
+                <td className="py-3 px-3 text-center text-zinc-500">Pay per check</td>
+                <td className="py-3 px-3 text-center text-zinc-500">Pay per check</td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">API Reports</td>
