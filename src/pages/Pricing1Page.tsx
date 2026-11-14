@@ -174,7 +174,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
       slug: "free",
       description: "Try for free. No credit card required",
       is_custom: false,
-      limits: { users: 1, contacts: 500, domains: 1 },
+      limits: { users: 1, contacts: 500, domains: "Shared only" },
       allowances: {
         emails_per_month: 500,
         whatsapp_included: {
@@ -241,7 +241,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
       slug: "pro",
       description: "Grow your business",
       is_custom: false,
-      limits: { users: 6, contacts: 50000, domains: 6 },
+      limits: { users: 6, contacts: 50000, domains: 10 },
       allowances: {
         emails_per_month: 50000,
         whatsapp_included: {
@@ -282,6 +282,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
     { credits: 500000, price: 30000.0, currency: "INR", formatted_price: "₹30,000", validity_months: 12 }
   ],
   addons: [
+    { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
     { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 500.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹500" },
     { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 999.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "₹999" },
@@ -313,7 +314,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
       slug: "free",
       description: "Try for free. No credit card required",
       is_custom: false,
-      limits: { users: 1, contacts: 500, domains: 1 },
+      limits: { users: 1, contacts: 500, domains: "Shared only" },
       allowances: {
         emails_per_month: 500,
         whatsapp_included: {
@@ -380,7 +381,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
       slug: "pro",
       description: "Grow your business",
       is_custom: false,
-      limits: { users: 6, contacts: 50000, domains: 6 },
+      limits: { users: 6, contacts: 50000, domains: 10 },
       allowances: {
         emails_per_month: 50000,
         whatsapp_included: {
@@ -421,6 +422,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
     { credits: 500000, price: 450.0, currency: "USD", formatted_price: "$450", validity_months: 12 }
   ],
   addons: [
+    { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 5.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$5" },
     { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 10.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$10" },
     { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 8.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$8" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 25.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "$25" },
@@ -635,15 +637,15 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
     }
 
     if (plan.slug === 'free') {
-      features.push('Email & WhatsApp campaigns', 'Shared WhatsApp inbox', '1 signup form');
+      features.push('Shared domain only', 'Email & WhatsApp campaigns', 'Shared WhatsApp inbox', '1 signup form');
     } else if (plan.slug === 'starter') {
-      features.push('Everything in Free', 'Basic segments & reports', '1 drip sequence', '1 chatbot');
+      features.push('1 sending domain', 'Custom tracking domain', 'Everything in Free', 'Basic segments & reports', '1 drip sequence', '1 chatbot');
     } else if (plan.slug === 'growth') {
-      features.push('Everything in Starter', '5 cross-channel workflows', '10 drip sequences, 5 chatbots', 'Commerce: products, inventory, orders', 'API access');
+      features.push('3 sending domains', 'Custom tracking domain', 'Everything in Starter', '5 cross-channel workflows', '10 drip sequences, 5 chatbots', 'Commerce: products, inventory, orders', 'API access');
     } else if (plan.slug === 'pro') {
-      features.push('Everything in Growth', 'Ads Manager & lead forms', 'Unlimited workflows & chatbots', 'Priority support');
+      features.push('10 sending domains', 'Custom tracking domain', 'Everything in Growth', 'Ads Manager & lead forms', 'Unlimited workflows & chatbots', 'Priority support');
     } else if (plan.slug === 'enterprise') {
-      features.push('Negotiated WhatsApp rates', 'Dedicated account manager', 'Custom onboarding & SLA');
+      features.push('Unlimited sending domains', 'Custom tracking domain', 'Negotiated WhatsApp rates', 'Dedicated account manager', 'Custom onboarding & SLA');
     }
 
     return features;
@@ -1671,15 +1673,38 @@ export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
                   {getPlanBySlug('enterprise')?.limits.users ? String(getPlanBySlug('enterprise')!.limits.users).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.users).slice(1) : 'Unlimited'}
                 </td>
               </tr>
+              {/* Sending domains */}
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
-                <td className="py-3 px-5 font-medium text-zinc-800">Domains</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('free')?.limits.domains ?? 1}</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('starter')?.limits.domains ?? 1}</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">{getPlanBySlug('growth')?.limits.domains ?? 3}</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('pro')?.limits.domains ?? 6}</td>
-                <td className="py-3 px-3 text-center text-zinc-600">
-                  {getPlanBySlug('enterprise')?.limits.domains ? String(getPlanBySlug('enterprise')!.limits.domains).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.domains).slice(1) : 'Unlimited'}
+                <td className="py-3 px-5 font-medium text-zinc-800">Sending domains</td>
+                <td className="py-3 px-3 text-center text-zinc-600">Shared domain only</td>
+                <td className="py-3 px-3 text-center text-zinc-600">1</td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">3</td>
+                <td className="py-3 px-3 text-center text-zinc-600">10</td>
+                <td className="py-3 px-3 text-center text-zinc-600">Unlimited</td>
+              </tr>
+              {/* Custom tracking domain */}
+              <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                <td className="py-3 px-5 font-medium text-zinc-800">Custom tracking domain</td>
+                <td className="py-3 px-3 text-center text-zinc-400">—</td>
+                <td className="py-3 px-3 text-center"><Check className="w-4 h-4 text-violet-700 mx-auto stroke-[2.5]" /></td>
+                <td className="py-3 px-3 text-center bg-violet-50/20"><Check className="w-4 h-4 text-violet-700 mx-auto stroke-[2.5]" /></td>
+                <td className="py-3 px-3 text-center"><Check className="w-4 h-4 text-violet-700 mx-auto stroke-[2.5]" /></td>
+                <td className="py-3 px-3 text-center"><Check className="w-4 h-4 text-violet-700 mx-auto stroke-[2.5]" /></td>
+              </tr>
+              {/* Extra domain */}
+              <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                <td className="py-3 px-5 font-medium text-zinc-800">Extra domain</td>
+                <td className="py-3 px-3 text-center text-zinc-400">—</td>
+                <td className="py-3 px-3 text-center text-zinc-700 font-medium">
+                  <AnimatedPrice value={currency === 'USD' ? '$5' : '₹300'} /> / mo
                 </td>
+                <td className="py-3 px-3 text-center text-zinc-600 font-medium bg-violet-50/20">
+                  same
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-600 font-medium">
+                  same
+                </td>
+                <td className="py-3 px-3 text-center text-zinc-400">—</td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
                 <td className="py-3 px-5 font-medium text-zinc-800">Emails included every month</td>
