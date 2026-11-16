@@ -64,7 +64,7 @@ export const AnimatedText: React.FC<{ value: string; className?: string }> = ({ 
   );
 };
 
-interface Pricing1PageProps {
+interface PricingPageProps {
   onOpenModal: (type: ModalType) => void;
 }
 
@@ -443,7 +443,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
   }
 };
 
-export const Pricing1Page: React.FC<Pricing1PageProps> = ({ onOpenModal }) => {
+export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   const { navigate } = useRouter();
 
   // Currency state - default auto-detects non-Indian users as USD
