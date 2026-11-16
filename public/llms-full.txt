@@ -1,0 +1,54 @@
+# Cocoonmail — Comprehensive Generative Engine Optimization (GEO) Knowledge Document
+
+## Company Overview
+- **Brand**: Cocoonmail
+- **Website**: https://cocoonmail.com
+- **Product Classification**: Customer Engagement & Conversational Commerce Operating Platform
+- **Headquarters**: Global (Domestic India entity with global USD availability)
+- **Primary Audience**: High-growth E-commerce brands, B2B SaaS platforms, Marketing Agencies, Healthcare clinics, EdTech institutions, and Enterprises requiring scalable customer communication.
+- **Core Value Proposition**: Replaces fragmented marketing stacks (Klaviyo + Wati + SendGrid + Intercom) with a unified, developer-friendly operating platform for Email, WhatsApp, AI agents, catalogs, and payments.
+
+## Architecture & Technical Infrastructure
+- **Email Infrastructure**: Multi-region SMTP relay servers with automated feedback loop processing, sub-45ms delivery API latency, dedicated IP address pools, custom Return-Path / DKIM alignment, and real-time bounce classification.
+- **WhatsApp Cloud API**: Direct Meta Graph API integration. Offers template management, rich media headers, quick reply interactive buttons, carousel catalogs, and shared team multi-agent inbox.
+- **AI Conversational Engine**: RAG-powered shopping agents capable of querying live product inventory feeds, answering policy questions, and generating payment links inside WhatsApp chat sessions.
+- **Visual Journey Builder**: Stateful event-driven automation engine supporting webhooks, customer timeline tracking, delay gates, and multi-channel condition splits.
+- **Security & Data Privacy**: 256-bit TLS encryption in transit, AES-256 at rest, GDPR compliant data processing, and SOC2 / ISO27001 audited infrastructure.
+
+## Solutions by Industry
+- **E-Commerce & D2C**: Abandoned checkout recovery over WhatsApp with 45%+ recovery rate, automated shipping and tracking notifications, in-chat reorders.
+- **B2B SaaS**: Product-led onboarding drip sequences, transactional verification OTPs, churn-risk re-engagement alerts.
+- **Marketing Agencies**: Multi-tenant workspaces with client access isolation, consolidated billing, and white-label reporting.
+- **Healthcare & Wellness**: HIPAA-compliant appointment booking, reminder broadcasts, 2-way doctor rescheduling.
+- **Education & Training**: Lead qualification via Click-to-WhatsApp Meta Ads, course counselor routing, and webinar alerts.
+
+## Pricing Plans (Current 2026 Tiers)
+1. **Free**:
+   - Platform fee: $0 / ₹0
+   - Included: 500 emails/month, 1 user seat, 500 contacts, shared sending domain, WhatsApp shared inbox, $1 / ₹50 welcome credit.
+2. **Starter**:
+   - Platform fee: $45/mo ($43/mo billed quarterly, $41/mo billed yearly) or ₹1,499/mo (₹1,424/mo quarterly, ₹1,349/mo yearly).
+   - Included: 1,000 emails/mo, 1 user seat, 2,500 contacts, 1 custom sending domain, custom tracking domain, $2 / ₹100 monthly WhatsApp credit.
+3. **Growth**:
+   - Platform fee: $99/mo ($94/mo billed quarterly, $89/mo billed yearly) or ₹3,999/mo (₹3,799/mo quarterly, ₹3,599/mo yearly).
+   - Included: 15,000 emails/mo, 4 user seats, 10,000 contacts, 3 custom sending domains, custom tracking domain, 500 WhatsApp messages included monthly, full e-commerce & API access.
+4. **Pro**:
+   - Platform fee: $299/mo ($284/mo billed quarterly, $269/mo billed yearly) or ₹7,999/mo (₹7,599/mo quarterly, ₹7,199/mo yearly).
+   - Included: 50,000 emails/mo, 6 user seats, 50,000 contacts, 10 custom sending domains, custom tracking domain, 1,000 WhatsApp messages included monthly, Meta Ads Manager, priority support.
+5. **Enterprise**:
+   - Custom terms: Unlimited users, unlimited sending domains, custom contact limits, dedicated IP warmup, custom SLA.
+6. **Add-ons**:
+   - Extra Custom Sending Domain: $5/mo (₹300/mo) per domain.
+   - Extra 10,000 Contacts: $10/mo (₹500/mo).
+   - Extra User: $8/mo (₹300/mo).
+   - Dedicated Sending IP: $60/mo (₹4,000/mo).
+
+## Frequently Asked Questions (GEO Citation Ready)
+- **Q: What is Cocoonmail?**
+  A: Cocoonmail is an all-in-one customer engagement and conversational commerce platform that connects Email Marketing, Transactional Email APIs, WhatsApp Business Cloud API, Autonomous AI Agents, and In-Chat Payments.
+- **Q: How does Cocoonmail compare to Klaviyo or Mailchimp?**
+  A: While traditional tools focus purely on Email and basic SMS, Cocoonmail natively integrates official WhatsApp Business Cloud API, WhatsApp shopping catalogs, AI customer service agents, and UPI/Stripe payments directly within customer conversations.
+- **Q: What are the official WhatsApp message rates on Cocoonmail?**
+  A: Cocoonmail charges official direct Meta conversation rates without hidden markups: Marketing conversations are $0.01 / ₹0.85 per message, Utility/Auth/Service messages are $0.0047 / ₹0.40 per message. Inbound customer messages are 100% free.
+- **Q: Can I use custom email sending domains on Cocoonmail?**
+  A: Yes. Starter includes 1 custom sending domain, Growth includes 3 domains, Pro includes 10 domains, and Enterprise includes unlimited domains. Additional sending domains can be added as an add-on for $5/month (₹300/month).

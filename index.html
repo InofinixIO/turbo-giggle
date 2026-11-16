@@ -8,6 +8,9 @@
       name="description"
       content="Acquire customers, engage them across Email and WhatsApp, automate conversations with AI, showcase products, accept payments, and measure the entire customer journey in one platform."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <link rel="canonical" href="https://cocoonmail.com/" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta property="og:title" content="Cocoonmail — One platform. Every conversation. Every conversion." />
     <meta
@@ -15,37 +18,129 @@
       content="Unified customer engagement, marketing automation, WhatsApp Business API, Email marketing, AI agents, and conversational commerce in one platform."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cocoonmail.com/" />
     <meta property="og:site_name" content="Cocoonmail" />
+    <meta property="og:image" content="https://cocoonmail.com/favicon.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Cocoonmail — One platform. Every conversation. Every conversion." />
     <meta
       name="twitter:description"
       content="Engage customers across Email and WhatsApp, automate conversations with AI, turn interactions into purchases, and measure the entire customer journey from one powerful platform."
     />
+    <meta name="twitter:image" content="https://cocoonmail.com/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://cdn.cocoonmail.com" />
+    <link rel="dns-prefetch" href="https://api.sit.onedigilta.in" />
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <!-- GEO & SEO Structured Data Graph (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Cocoonmail",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "All",
-      "description": "Unified platform for Email marketing, WhatsApp Business API, AI agents, marketing automation, and conversational commerce.",
-      "offers": {
-        "@type": "AggregateOffer",
-        "priceCurrency": "USD",
-        "lowPrice": "0"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "1240"
-      }
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://cocoonmail.com/#organization",
+          "name": "Cocoonmail",
+          "url": "https://cocoonmail.com",
+          "logo": "https://cocoonmail.com/favicon.png",
+          "description": "Unified platform for Email marketing, WhatsApp Business API, Autonomous AI agents, marketing automation, and conversational commerce.",
+          "sameAs": [
+            "https://www.linkedin.com/company/cocoonmail",
+            "https://twitter.com/cocoonmail",
+            "https://github.com/cocoonmail"
+          ],
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "email": "support@cocoonmail.com",
+              "availableLanguage": ["English", "Hindi"]
+            },
+            {
+              "@type": "ContactPoint",
+              "contactType": "sales",
+              "email": "sales@cocoonmail.com",
+              "availableLanguage": ["English", "Hindi"]
+            }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://cocoonmail.com/#website",
+          "url": "https://cocoonmail.com",
+          "name": "Cocoonmail",
+          "publisher": {
+            "@id": "https://cocoonmail.com/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://cocoonmail.com/resources/guides?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://cocoonmail.com/#software",
+          "name": "Cocoonmail Platform",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "All (Web-based Cloud Platform)",
+          "description": "Enterprise customer engagement, WhatsApp Business Cloud API messaging, transactional SMTP email dispatch, and AI conversational sales agents.",
+          "offers": {
+            "@type": "AggregateOffer",
+            "priceCurrency": "USD",
+            "lowPrice": "0",
+            "highPrice": "299",
+            "offerCount": "4"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "1240"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://cocoonmail.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Cocoonmail?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Cocoonmail is a unified customer engagement and conversational commerce operating platform combining email marketing, sub-45ms transactional email APIs, official Meta WhatsApp Business Cloud API, autonomous AI conversational agents, native product catalogs, and in-chat payments."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does WhatsApp pricing work on Cocoonmail?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Cocoonmail charges official direct Meta conversation rates ($0.01 / ₹0.85 for Marketing messages and $0.0047 / ₹0.40 for Utility, Authentication, and Service messages). Growth plans include 500 messages monthly, Pro plans include 1,000 messages monthly, and all customer inbound messages are 100% free."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Cocoonmail support custom email sending domains?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Starter plans include 1 custom sending domain, Growth plans include 3 sending domains, Pro plans include 10 sending domains, and Enterprise plans offer unlimited domains. Additional sending domains can be added for $5/month (₹300/month)."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does Cocoonmail compare to Klaviyo or Mailchimp?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Unlike traditional email-only platforms, Cocoonmail natively combines email marketing and transactional SMTP with official WhatsApp Business Cloud API, AI sales chatbots, interactive product catalogs, and in-chat UPI/Stripe payments in one connected workspace."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
   </head>

@@ -1,0 +1,41 @@
+# Cocoonmail
+
+> Cocoonmail is a unified customer engagement and conversational commerce operating platform. It bridges email marketing, transactional email APIs, official Meta WhatsApp Business Cloud API, autonomous AI conversational agents, native product catalogs, and in-chat payments (UPI, Stripe, Razorpay) into a single, cohesive developer-friendly platform.
+
+## Core Capabilities & Services
+
+- [Email Marketing & Drag-and-Drop Builder](https://cocoonmail.com/platform/email): Responsive visual email editor, dynamic Liquid variables, automated SPF/DKIM/DMARC alignment, 99.8% inbox deliverability.
+- [Transactional Email & SMTP Relay](https://cocoonmail.com/platform/transactional-email): Sub-45ms latency dispatch for OTPs, order receipts, and system alerts via high-throughput REST API and SMTP relay with dedicated IP pools.
+- [WhatsApp Business Cloud API](https://cocoonmail.com/platform/whatsapp): Official Meta Business Partner integration with 98% open rates, broadcast campaigns, shared team inboxes, and verified green badge assistance.
+- [Autonomous WhatsApp AI Agents](https://cocoonmail.com/platform/ai-agents): 24/7 AI conversational shopping agents grounded in your live product catalogs and inventory documents that answer inquiries and close sales in-chat.
+- [Visual Customer Journey Automation](https://cocoonmail.com/platform/automation): Drag-and-drop workflow canvas for multi-channel sequences, abandoned cart triggers, time delays, and AI sentiment branching.
+- [Conversational Commerce & Product Catalog](https://cocoonmail.com/commerce): Synced product catalogs and native payment links inside WhatsApp allowing customers to browse, cart, and pay seamlessly.
+- [Developer API & Webhooks](https://cocoonmail.com/developers): Typed REST endpoints, sub-second HMAC signed webhooks, and official client SDKs.
+
+## Pricing Structure (Launch 2026)
+
+Cocoonmail charges a predictable monthly/quarterly/yearly platform fee. Email credits and WhatsApp messages are prepaid so customers only pay for what they send:
+
+- **Free ($0 / ₹0)**: 500 emails/mo, 1 user, 500 contacts, shared sending domain, WhatsApp shared inbox, $1 / ₹50 welcome credit.
+- **Starter ($45/mo or ₹1,499/mo)**: 1,000 emails/mo, 1 user, 2,500 contacts, 1 custom sending domain, custom tracking domain, $2 / ₹100 monthly WhatsApp credit.
+- **Growth ($99/mo or ₹3,999/mo)**: 15,000 emails/mo, 4 users, 10,000 contacts, 3 custom sending domains, custom tracking domain, 500 WhatsApp messages included monthly, full e-commerce & API access.
+- **Pro ($299/mo or ₹7,999/mo)**: 50,000 emails/mo, 6 users, 50,000 contacts, 10 custom sending domains, custom tracking domain, 1,000 WhatsApp messages included monthly, Ads Manager, priority support.
+- **Enterprise (Custom)**: Unlimited users, unlimited domains, dedicated account manager, custom throughput and SLAs.
+- **Add-on**: Extra Custom Sending Domain available at $5/month (₹300/month).
+
+Full details: [Cocoonmail Pricing](https://cocoonmail.com/pricing-1)
+
+## Key Technical Specifications
+
+- Delivery Speed: Sub-45ms transactional API response time.
+- WhatsApp API: Direct Meta Cloud API tier with zero middleman markup.
+- Inbound Customer WhatsApp Messages: 100% Free.
+- Compliance: ISO 27001, SOC 2 Type II, GDPR, HIPAA-ready infrastructure.
+- Deliverability: Dedicated IP warmup automation, custom return-path, DMARC 100% enforcement.
+
+## Developer & API Documentation
+
+- [REST API Reference](https://cocoonmail.com/developers/api)
+- [Real-Time Webhooks](https://cocoonmail.com/developers/webhooks)
+- [Integrations (Shopify, WooCommerce, Stripe, HubSpot)](https://cocoonmail.com/developers/integrations)
+- [Full Context & AI Documentation](https://cocoonmail.com/llms-full.txt)

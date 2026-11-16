@@ -118,6 +118,10 @@ const routeMetadata: Record<string, { title: string; description: string }> = {
     title: 'Pricing & Interactive ROI Calculator — Cocoonmail',
     description: 'Transparent monthly plans for Starter, Growth, and Scale with currency switcher (USD/INR) and contact volume estimator.'
   },
+  '/pricing-1': {
+    title: 'Transparent Pricing & Monthly Bill Estimator — Cocoonmail',
+    description: 'Predictable platform pricing for Email & WhatsApp marketing with included monthly allowances, sending domains, and prepaid usage credits.'
+  },
   '/resources/guides': {
     title: 'Marketing Guides & Best Practices — Cocoonmail',
     description: 'Expert playbooks on WhatsApp commerce compliance, high-deliverability email warmups, and AI agent configuration.'
