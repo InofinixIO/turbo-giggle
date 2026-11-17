@@ -178,7 +178,7 @@ export const PlatformNavSwitcher: React.FC<PlatformNavSwitcherProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border-b border-slate-800 text-white sticky top-[61px] sm:top-[69px] z-40 transition-all shadow-md">
+    <div className="bg-slate-900 border-b border-slate-800 text-white sticky top-16 z-30 transition-all shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Breadcrumb & Quick Switcher Bar */}
