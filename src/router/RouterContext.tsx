@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface RouterContextType {
   currentPath: string;
-  navigate: (path: string) => void;
+  navigate: (path: string, options?: { scroll?: boolean }) => void;
 }
 
 const RouterContext = createContext<RouterContextType>({
@@ -115,8 +115,8 @@ const routeMetadata: Record<string, { title: string; description: string }> = {
     description: 'Connect Shopify, WooCommerce, Salesforce, HubSpot, Stripe, Razorpay, and Meta with one click.'
   },
   '/pricing': {
-    title: 'Pricing & Interactive ROI Calculator — Cocoonmail',
-    description: 'Transparent monthly plans for Starter, Growth, and Scale with currency switcher (USD/INR) and contact volume estimator.'
+    title: 'Pricing & Plans — Cocoonmail',
+    description: 'Transparent monthly plans for Starter, Growth, and Pro with currency switcher (USD/INR), included allowances, and interactive bill estimator.'
   },
   '/pricing-1': {
     title: 'Transparent Pricing & Monthly Bill Estimator — Cocoonmail',
@@ -152,13 +152,15 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({ children }) => {
     return '/';
   });
 
-  const navigate = (path: string) => {
+  const navigate = (path: string, options?: { scroll?: boolean }) => {
     if (typeof window !== 'undefined') {
       if (window.location.pathname !== path) {
         window.history.pushState({}, '', path);
       }
       setCurrentPath(path);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (options?.scroll !== false) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 

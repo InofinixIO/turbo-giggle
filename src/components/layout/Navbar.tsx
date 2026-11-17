@@ -413,7 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenModal }) => {
                 href="/pricing"
                 onClick={(e) => handleLinkClick(e, '/pricing')}
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  currentPath === '/pricing' ? 'text-blue-600 bg-blue-50/60 font-semibold' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                  currentPath.startsWith('/pricing') ? 'text-blue-600 bg-blue-50/60 font-semibold' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 Pricing

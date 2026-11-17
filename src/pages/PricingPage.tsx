@@ -444,7 +444,23 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
 };
 
 export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
-  const { navigate } = useRouter();
+  const validPlans: PlanId[] = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+
+  // Plan Selection State: initialized from URL query parameter ?plan= or default to 'growth'
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const planParam = params.get('plan')?.toLowerCase();
+        if (planParam && validPlans.includes(planParam as PlanId)) {
+          return planParam as PlanId;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return 'growth';
+  });
 
   // Currency state - default auto-detects non-Indian users as USD
   const [currency, setCurrency] = useState<Currency>(() => {
@@ -478,7 +494,20 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
 
   // User Interactive State
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
-  const [selectedCalcPlan, setSelectedCalcPlan] = useState<CalcPlanId>('growth');
+  const [selectedCalcPlan, setSelectedCalcPlan] = useState<CalcPlanId>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const planParam = params.get('plan')?.toLowerCase();
+        if (planParam && ['free', 'starter', 'growth', 'pro'].includes(planParam)) {
+          return planParam as CalcPlanId;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return 'growth';
+  });
   const [emails, setEmails] = useState<number>(50000);
   const [mkt, setMkt] = useState<number>(5000);
   const [util, setUtil] = useState<number>(2000);
@@ -487,6 +516,46 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   const [copiedEstimate, setCopiedEstimate] = useState<boolean>(false);
   const [highlightedPlan, setHighlightedPlan] = useState<PlanId | null>(null);
   const [highlightedCalc, setHighlightedCalc] = useState<boolean>(false);
+
+  // Synchronize selection when browser history or query parameter changes
+  useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const planParam = params.get('plan')?.toLowerCase();
+        if (planParam && validPlans.includes(planParam as PlanId)) {
+          setSelectedPlan(planParam as PlanId);
+          if (['free', 'starter', 'growth', 'pro'].includes(planParam)) {
+            setSelectedCalcPlan(planParam as CalcPlanId);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Handle plan selection and update URL query parameter ?plan=
+  const handleSelectPlan = (planId: PlanId) => {
+    setSelectedPlan(planId);
+    if (['free', 'starter', 'growth', 'pro'].includes(planId)) {
+      setSelectedCalcPlan(planId as CalcPlanId);
+    }
+    try {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('plan') !== planId) {
+          url.searchParams.set('plan', planId);
+          window.history.pushState({}, '', url.toString());
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   // Fetch Pricing Data from API: https://api.sit.onedigilta.in/api/pricing with full offline fallback
   useEffect(() => {
@@ -514,7 +583,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             const proPlan = data.plans.find(p => p.slug === 'pro');
             if (proPlan) {
               proPlan.limits.users = 4;
-              if (proPlan.limits.domains === 6 || proPlan.limits.domains < 10) {
+              if (proPlan.limits.domains === 6 || (typeof proPlan.limits.domains === 'number' && proPlan.limits.domains < 10)) {
                 proPlan.limits.domains = 10;
               }
             }
@@ -736,6 +805,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
       }
 
       if (planParam && ['free', 'starter', 'growth', 'pro', 'enterprise'].includes(planParam)) {
+        setSelectedPlan(planParam as PlanId);
         if (['free', 'starter', 'growth', 'pro'].includes(planParam)) {
           setSelectedCalcPlan(planParam as CalcPlanId);
         }
@@ -768,14 +838,18 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
     }
   }, []);
 
-  // Copy shareable link for a specific plan
+  // Copy shareable link for a specific plan using query parameters
   const copyPlanLink = (e: React.MouseEvent, planId: PlanId) => {
     e.stopPropagation();
     try {
       const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('plan', planId);
-      url.searchParams.set('billing', billingInterval);
-      url.searchParams.set('currency', currency);
+      if (billingInterval !== 'monthly') {
+        url.searchParams.set('billing', billingInterval);
+      }
+      if (currency !== 'USD') {
+        url.searchParams.set('currency', currency);
+      }
       navigator.clipboard.writeText(url.toString()).then(() => {
         setCopiedPlanId(planId);
         setTimeout(() => {
@@ -1131,6 +1205,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 items-stretch">
           {apiData.plans.map((plan) => {
             const isFeatured = plan.slug === 'growth';
+            const isSelected = selectedPlan === plan.slug;
             const isHighlighted = highlightedPlan === plan.slug;
             const pricing = getPlanPricing(plan.slug);
             const features = getPlanFeatures(plan);
@@ -1139,25 +1214,44 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
               <article 
                 id={`plan-${plan.slug}`}
                 key={plan.slug}
-                className={`relative bg-white rounded-2xl p-6 flex flex-col justify-between gap-5 transition-all duration-300 ${
-                  isHighlighted 
-                    ? 'ring-4 ring-violet-500 shadow-2xl scale-[1.02]' 
-                    : isFeatured 
-                      ? 'ring-2 ring-violet-700 shadow-xl shadow-violet-100/50' 
-                      : 'border border-zinc-200 hover:border-zinc-300 shadow-xs'
+                onClick={() => handleSelectPlan(plan.slug)}
+                className={`relative bg-white rounded-2xl p-6 flex flex-col justify-between gap-5 transition-all duration-300 cursor-pointer ${
+                  isSelected 
+                    ? 'ring-4 ring-violet-600 shadow-2xl scale-[1.02] bg-gradient-to-b from-violet-50/20 to-white' 
+                    : isHighlighted 
+                      ? 'ring-4 ring-violet-500 shadow-2xl scale-[1.02]' 
+                      : isFeatured 
+                        ? 'ring-2 ring-violet-400 hover:ring-violet-500 shadow-lg shadow-violet-100/50' 
+                        : 'border border-zinc-200 hover:border-violet-300 hover:shadow-md'
                 }`}
               >
-                {isFeatured && (
-                  <div className="absolute -top-3 left-6 bg-violet-700 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
-                    Most popular
-                  </div>
-                )}
+                {/* Top Badges */}
+                <div className="absolute -top-3 left-6 right-6 flex items-center justify-between pointer-events-none">
+                  {isFeatured ? (
+                    <div className="bg-violet-700 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+                      Most popular
+                    </div>
+                  ) : <div />}
+                  {isSelected && (
+                    <div className="bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                      <span>Selected</span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex flex-col gap-4">
                   {/* Card Header & Share Plan Link */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
-                      <h2 className="text-xl font-bold text-zinc-900">{plan.name}</h2>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all shrink-0 ${
+                          isSelected ? 'border-violet-700 bg-violet-700' : 'border-zinc-300 bg-white'
+                        }`}>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <h2 className="text-xl font-bold text-zinc-900">{plan.name}</h2>
+                      </div>
                       <p className="text-xs text-zinc-600 min-h-[36px] leading-relaxed">{plan.description}</p>
                     </div>
                     
@@ -1196,14 +1290,25 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
 
                   <button
                     type="button"
-                    onClick={() => handleCtaClick(plan.slug)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isSelected) {
+                        handleCtaClick(plan.slug);
+                      } else {
+                        handleSelectPlan(plan.slug);
+                      }
+                    }}
                     className={`w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      isFeatured 
+                      isSelected 
                         ? 'bg-violet-700 hover:bg-violet-800 text-white shadow-md shadow-violet-200' 
-                        : 'bg-white hover:bg-zinc-50 text-zinc-900 border border-zinc-300'
+                        : 'bg-zinc-50 hover:bg-violet-50 text-zinc-800 hover:text-violet-700 border border-zinc-200 hover:border-violet-300'
                     }`}
                   >
-                    <span>{plan.slug === 'enterprise' ? 'Talk to sales' : plan.slug === 'free' ? 'Start free' : `Choose ${plan.name}`}</span>
+                    <span>
+                      {isSelected 
+                        ? (plan.slug === 'enterprise' ? 'Talk to sales' : plan.slug === 'free' ? 'Start free' : `Proceed with ${plan.name}`)
+                        : `Select ${plan.name}`}
+                    </span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
@@ -1427,7 +1532,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
                       key={planKey}
                       type="button"
                       aria-pressed={isSelected}
-                      onClick={() => setSelectedCalcPlan(planKey)}
+                      onClick={() => {
+                        setSelectedCalcPlan(planKey);
+                        handleSelectPlan(planKey);
+                      }}
                       className={`relative py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center ${
                         isSelected 
                           ? 'text-white' 
@@ -1667,11 +1775,33 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/50">
                 <th scope="col" className="text-left py-4 px-5 font-semibold text-zinc-500 w-[28%]">Feature</th>
-                <th scope="col" className="text-center py-4 px-3 font-bold text-zinc-800">Free</th>
-                <th scope="col" className="text-center py-4 px-3 font-bold text-zinc-800">Starter</th>
-                <th scope="col" className="text-center py-4 px-3 font-bold text-violet-700 bg-violet-50/50">Growth</th>
-                <th scope="col" className="text-center py-4 px-3 font-bold text-zinc-800">Pro</th>
-                <th scope="col" className="text-center py-4 px-3 font-bold text-zinc-800">Enterprise</th>
+                {(['free', 'starter', 'growth', 'pro', 'enterprise'] as PlanId[]).map((pKey) => {
+                  const pName = pKey.charAt(0).toUpperCase() + pKey.slice(1);
+                  const isSel = selectedPlan === pKey;
+                  return (
+                    <th 
+                      key={pKey} 
+                      scope="col" 
+                      onClick={() => handleSelectPlan(pKey)}
+                      className={`text-center py-4 px-3 font-bold cursor-pointer transition-colors ${
+                        isSel 
+                          ? 'text-violet-700 bg-violet-50/60 border-b-2 border-violet-600' 
+                          : pKey === 'growth'
+                            ? 'text-zinc-800 hover:text-violet-700 bg-violet-50/20'
+                            : 'text-zinc-800 hover:text-violet-700 hover:bg-zinc-100/50'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span>{pName}</span>
+                        {isSel && (
+                          <span className="text-[10px] font-semibold text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
 
