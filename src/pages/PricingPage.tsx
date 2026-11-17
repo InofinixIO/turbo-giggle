@@ -183,7 +183,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
           currency: "INR",
           is_one_time: true,
           validity_days: 90,
-          description: "₹50 one-time credit (expires in 90 days)"
+          description: "Free WhatsApp ₹50 credit  "
         }
       },
       pricing: {
@@ -283,7 +283,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
   ],
   addons: [
     { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
-    { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 500.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹500" },
+    // { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 500.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹500" },
     { addon_key: "EXTRA_USER", name: "Extra Team Member", description: "Add 1 additional team member to your workspace", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 999.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "₹999" },
     { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 4000.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹4,000" },
@@ -323,7 +323,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           currency: "USD",
           is_one_time: true,
           validity_days: 90,
-          description: "$1 one-time credit (expires in 90 days)"
+          description: "WhatsApp $1 credit"
         }
       },
       pricing: {
@@ -345,7 +345,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 2.0,
           currency: "USD",
           is_one_time: false,
-          description: "$2 credit"
+          description: "WhatsApp $2 credit"
         }
       },
       pricing: {
@@ -367,7 +367,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 10.0,
           currency: "USD",
           is_one_time: false,
-          description: "$10 credit"
+          description: "WhatsApp $10 credit"
         }
       },
       pricing: {
@@ -389,7 +389,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 20.0,
           currency: "USD",
           is_one_time: false,
-          description: "$20 credit"
+          description: "WhatsApp $20 credit"
         }
       },
       pricing: {
@@ -423,7 +423,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
   ],
   addons: [
     { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 5.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$5" },
-    { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 10.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$10" },
+    // { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 10.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$10" },
     { addon_key: "EXTRA_USER", name: "Extra Team Member", description: "Add 1 additional team member to your workspace", price: 8.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$8" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 25.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "$25" },
     { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 60.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$60" },
