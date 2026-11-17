@@ -227,7 +227,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
           count: 500,
           destination: "+91 (India recipients only)",
           is_one_time: false,
-          description: "500 messages/month (India recipients only)"
+          description: "Free WhatsApp 500 messages"
         }
       },
       pricing: {
@@ -249,7 +249,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
           count: 1000,
           destination: "+91 (India recipients only)",
           is_one_time: false,
-          description: "1,000 messages/month (India recipients only)"
+          description: "Free WhatsApp 1,000 messages"
         }
       },
       pricing: {
@@ -291,7 +291,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
   ],
   whatsapp_rate_card: [
     { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.98, currency: "INR", description: "WhatsApp Marketing conversation" },
-    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Utility message" },
+    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.25, currency: "INR", description: "WhatsApp Utility message" },
     { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Authentication OTP" },
     { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Service  replies (after 1,000 free a month)" }
   ],
@@ -722,7 +722,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   const waUtilityRate = useMemo(() => {
     const item = apiData.whatsapp_rate_card.find(r => r.category === 'utility' || r.feature_type === 'WHATSAPP_UTILITY');
     if (currency === 'INR' || apiData.currency === 'INR') {
-      return item ? item.rate_per_message : 0.15;
+      return item ? item.rate_per_message : 0.25;
     }
     return item ? item.rate_per_message : 0.0047;
   }, [apiData, currency]);
@@ -1486,7 +1486,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    {apiData.whatsapp_rate_card.map((rate) => {
+                    {apiData.whatsapp_rate_card.filter(rate => rate.category != "WHATSAPP_INCLUDED_MESSAGES").map((rate) => {
                       const label = rate.category.charAt(0).toUpperCase() + rate.category.slice(1);
                       const displayRate = currency === 'USD' 
                         ? `$${rate.rate_per_message}` 
