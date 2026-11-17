@@ -16,14 +16,14 @@
 
 Cocoonmail charges a predictable monthly/quarterly/yearly platform fee. Email credits and WhatsApp messages are prepaid so customers only pay for what they send:
 
-- **Free ($0 / ₹0)**: 500 emails/mo, 1 user, 500 contacts, shared sending domain, WhatsApp shared inbox, $1 / ₹50 welcome credit.
-- **Starter ($45/mo or ₹1,499/mo)**: 1,000 emails/mo, 1 user, 2,500 contacts, 1 custom sending domain, custom tracking domain, $2 / ₹100 monthly WhatsApp credit.
-- **Growth ($99/mo or ₹3,999/mo)**: 15,000 emails/mo, 4 users, 10,000 contacts, 3 custom sending domains, custom tracking domain, 500 WhatsApp messages included monthly, full e-commerce & API access.
-- **Pro ($299/mo or ₹7,999/mo)**: 50,000 emails/mo, 6 users, 50,000 contacts, 10 custom sending domains, custom tracking domain, 1,000 WhatsApp messages included monthly, Ads Manager, priority support.
-- **Enterprise (Custom)**: Unlimited users, unlimited domains, dedicated account manager, custom throughput and SLAs.
+- **Free ($0 / ₹0)**: 500 emails/mo, 1 Team Member, 500 contacts, shared sending domain, WhatsApp shared inbox, $1 / ₹50 welcome credit.
+- **Starter ($45/mo or ₹1,499/mo)**: 1,000 emails/mo, 1 Team Member, 2,500 contacts, 1 custom sending domain, custom tracking domain, $2 / ₹100 monthly WhatsApp credit.
+- **Growth ($99/mo or ₹3,999/mo)**: 15,000 emails/mo, 2 Team Members, 10,000 contacts, 3 custom sending domains, custom tracking domain, 500 WhatsApp messages included monthly, full e-commerce & API access.
+- **Pro ($299/mo or ₹7,999/mo)**: 50,000 emails/mo, 4 Team Members, 50,000 contacts, 10 custom sending domains, custom tracking domain, 1,000 WhatsApp messages included monthly, Ads Manager, priority support.
+- **Enterprise (Custom)**: Unlimited Team Members, unlimited domains, dedicated account manager, custom throughput and SLAs.
 - **Add-on**: Extra Custom Sending Domain available at $5/month (₹300/month).
 
-Full details: [Cocoonmail Pricing](https://cocoonmail.com/pricing-1)
+Full details: [Cocoonmail Pricing](https://cocoonmail.com/pricing)
 
 ## Key Technical Specifications
 

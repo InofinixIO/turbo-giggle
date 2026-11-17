@@ -205,7 +205,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
           amount: 100.0,
           currency: "INR",
           is_one_time: false,
-          description: "₹100/month credit"
+          description: "₹100 credit"
         }
       },
       pricing: {
@@ -219,7 +219,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
       slug: "growth",
       description: "Boost your business",
       is_custom: false,
-      limits: { users: 4, contacts: 10000, domains: 3 },
+      limits: { users: 2, contacts: 10000, domains: 3 },
       allowances: {
         emails_per_month: 15000,
         whatsapp_included: {
@@ -231,7 +231,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
         }
       },
       pricing: {
-        monthly: { payable: 3999, effective_monthly: 3999, discount_percentage: 0, formatted: "₹3,999/month" },
+        monthly: { payable: 3999, effective_monthly: 3999, discount_percentage: 0, formatted: "₹3999/month" },
         quarterly: { payable: 11397, effective_monthly: 3799, discount_percentage: 5, billing_months: 3, formatted: "₹11,397/quarter (₹3,799/mo)" },
         yearly: { payable: 43189.2, effective_monthly: 3599.1, discount_percentage: 10, billing_months: 12, formatted: "₹43,189/year (₹3,599/mo)" }
       }
@@ -241,7 +241,7 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
       slug: "pro",
       description: "Grow your business",
       is_custom: false,
-      limits: { users: 6, contacts: 50000, domains: 10 },
+      limits: { users: 4, contacts: 50000, domains: 10 },
       allowances: {
         emails_per_month: 50000,
         whatsapp_included: {
@@ -284,16 +284,16 @@ const INITIAL_INR_DATA: ApiPricingResponse = {
   addons: [
     { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
     { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 500.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹500" },
-    { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
+    { addon_key: "EXTRA_USER", name: "Extra Team Member", description: "Add 1 additional team member to your workspace", price: 300.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹300" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 999.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "₹999" },
     { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 4000.0, currency: "INR", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "₹4,000" },
     { addon_key: "EMAIL_VERIFICATION", name: "Email Verification", description: "Verify email addresses before sending", price: 0.1, currency: "INR", billing_interval: "MONTHLY", unit: "per check", applicable_plan: null, formatted_price: "₹0.10" }
   ],
   whatsapp_rate_card: [
-    { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.85, currency: "INR", description: "WhatsApp Marketing conversation" },
-    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Utility message" },
-    { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Authentication OTP" },
-    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.4, currency: "INR", description: "WhatsApp Service  replies (after 1,000 free a month)" }
+    { feature_type: "WHATSAPP_MARKETING", category: "marketing", rate_per_message: 0.98, currency: "INR", description: "WhatsApp Marketing conversation" },
+    { feature_type: "WHATSAPP_UTILITY", category: "utility", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Utility message" },
+    { feature_type: "WHATSAPP_AUTHENTICATION", category: "authentication", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Authentication OTP" },
+    { feature_type: "WHATSAPP_SERVICE", category: "service", rate_per_message: 0.15, currency: "INR", description: "WhatsApp Service  replies (after 1,000 free a month)" }
   ],
   rules: {
     free_service_messages_monthly: 1000,
@@ -345,7 +345,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 2.0,
           currency: "USD",
           is_one_time: false,
-          description: "$2/month credit"
+          description: "$2 credit"
         }
       },
       pricing: {
@@ -359,7 +359,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
       slug: "growth",
       description: "Boost your business",
       is_custom: false,
-      limits: { users: 4, contacts: 10000, domains: 3 },
+      limits: { users: 2, contacts: 10000, domains: 3 },
       allowances: {
         emails_per_month: 15000,
         whatsapp_included: {
@@ -367,7 +367,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 10.0,
           currency: "USD",
           is_one_time: false,
-          description: "$10/month credit"
+          description: "$10 credit"
         }
       },
       pricing: {
@@ -381,7 +381,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
       slug: "pro",
       description: "Grow your business",
       is_custom: false,
-      limits: { users: 6, contacts: 50000, domains: 10 },
+      limits: { users: 4, contacts: 50000, domains: 10 },
       allowances: {
         emails_per_month: 50000,
         whatsapp_included: {
@@ -389,7 +389,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
           amount: 20.0,
           currency: "USD",
           is_one_time: false,
-          description: "$20/month credit"
+          description: "$20 credit"
         }
       },
       pricing: {
@@ -424,7 +424,7 @@ const INITIAL_USD_DATA: ApiPricingResponse = {
   addons: [
     { addon_key: "EXTRA_DOMAIN", name: "Custom Sending Domain", description: "Add 1 additional email sending domain with custom DNS & tracking", price: 5.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$5" },
     { addon_key: "EXTRA_CONTACTS_10K", name: "Extra 10,000 Contacts", description: "Increase workspace contact limit by 10,000", price: 10.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$10" },
-    { addon_key: "EXTRA_USER", name: "Extra User", description: "Add 1 additional team member to your workspace", price: 8.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$8" },
+    { addon_key: "EXTRA_USER", name: "Extra Team Member", description: "Add 1 additional team member to your workspace", price: 8.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$8" },
     { addon_key: "ADS_MANAGER_GROWTH", name: "Ads Manager on Growth plan", description: "Full access to Ads Manager on the Growth plan", price: 25.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: "Growth", formatted_price: "$25" },
     { addon_key: "DEDICATED_IP", name: "Dedicated Sending IP", description: "Exclusive IP address for custom email sending reputation", price: 60.0, currency: "USD", billing_interval: "MONTHLY", unit: "per month", applicable_plan: null, formatted_price: "$60" },
     { addon_key: "EMAIL_VERIFICATION", name: "Email Verification", description: "Verify email addresses before sending", price: 0.0, currency: "USD", billing_interval: "MONTHLY", unit: "per check", applicable_plan: null, formatted_price: "$0.00" }
@@ -506,6 +506,55 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
               : null;
 
           if (data && data.plans && Array.isArray(data.plans)) {
+            // Apply team members: Growth = 2, Pro = 4
+            const growthPlan = data.plans.find(p => p.slug === 'growth');
+            if (growthPlan) {
+              growthPlan.limits.users = 2;
+            }
+            const proPlan = data.plans.find(p => p.slug === 'pro');
+            if (proPlan) {
+              proPlan.limits.users = 4;
+              if (proPlan.limits.domains === 6 || proPlan.limits.domains < 10) {
+                proPlan.limits.domains = 10;
+              }
+            }
+
+            // Apply WhatsApp pricing for INR: Marketing 0.98 INR, Utility/Authentication/Service 0.15 INR
+            if (data.currency === 'INR' || currency === 'INR') {
+              if (data.whatsapp_rate_card && Array.isArray(data.whatsapp_rate_card)) {
+                data.whatsapp_rate_card = data.whatsapp_rate_card.map(rate => {
+                  if (rate.category === 'marketing' || rate.feature_type === 'WHATSAPP_MARKETING') {
+                    return { ...rate, rate_per_message: 0.98, currency: 'INR' };
+                  }
+                  return { ...rate, rate_per_message: 0.15, currency: 'INR' };
+                });
+              }
+            }
+
+            // Ensure Custom Sending Domain addon is present and Extra User is Extra Team Member
+            const extraDomainAddon: ApiAddonDto = {
+              addon_key: "EXTRA_DOMAIN",
+              name: "Custom Sending Domain",
+              description: "Add 1 additional email sending domain with custom DNS & tracking",
+              price: (data.currency === 'USD' || currency === 'USD') ? 5.0 : 300.0,
+              currency: (data.currency === 'USD' || currency === 'USD') ? 'USD' : 'INR',
+              billing_interval: "MONTHLY",
+              unit: "per month",
+              applicable_plan: null,
+              formatted_price: (data.currency === 'USD' || currency === 'USD') ? '$5' : '₹300'
+            };
+            if (data.addons) {
+              if (!data.addons.some(a => a.addon_key === 'EXTRA_DOMAIN')) {
+                data.addons = [extraDomainAddon, ...data.addons];
+              }
+              data.addons = data.addons.map(addon => {
+                if (addon.addon_key === 'EXTRA_USER') {
+                  return { ...addon, name: 'Extra Team Member' };
+                }
+                return addon;
+              });
+            }
+
             setApiData(data);
             return;
           }
@@ -534,12 +583,18 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   // Read rates from API response
   const waMarketingRate = useMemo(() => {
     const item = apiData.whatsapp_rate_card.find(r => r.category === 'marketing' || r.feature_type === 'WHATSAPP_MARKETING');
-    return item ? item.rate_per_message : (currency === 'USD' ? 0.01 : 0.85);
+    if (currency === 'INR' || apiData.currency === 'INR') {
+      return item ? item.rate_per_message : 0.98;
+    }
+    return item ? item.rate_per_message : 0.01;
   }, [apiData, currency]);
 
   const waUtilityRate = useMemo(() => {
     const item = apiData.whatsapp_rate_card.find(r => r.category === 'utility' || r.feature_type === 'WHATSAPP_UTILITY');
-    return item ? item.rate_per_message : (currency === 'USD' ? 0.0047 : 0.40);
+    if (currency === 'INR' || apiData.currency === 'INR') {
+      return item ? item.rate_per_message : 0.15;
+    }
+    return item ? item.rate_per_message : 0.0047;
   }, [apiData, currency]);
 
   const currSymbol = apiData.currency_symbol || (currency === 'USD' ? '$' : '₹');
@@ -616,7 +671,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   const getPlanFeatures = (plan: ApiPlanDto): string[] => {
     const features: string[] = [];
     const emailsCount = typeof plan.allowances.emails_per_month === 'number' 
-      ? `${num(plan.allowances.emails_per_month)} emails/month included` 
+      ? `Free ${num(plan.allowances.emails_per_month)} emails included` 
       : 'Custom email quota';
     features.push(emailsCount);
 
@@ -631,9 +686,9 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
     }
 
     if (typeof plan.limits.users === 'number') {
-      features.push(`${plan.limits.users} user${plan.limits.users > 1 ? 's' : ''}`);
+      features.push(`${plan.limits.users} Team Member${plan.limits.users > 1 ? 's' : ''}`);
     } else {
-      features.push('Unlimited users');
+      features.push('Unlimited Team Members');
     }
 
     if (plan.slug === 'free') {
@@ -853,7 +908,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
     <div className="bg-[#FAFAFB] text-[#18181B] min-h-screen font-sans selection:bg-violet-100 selection:text-violet-900 pt-16">
       
       {/* Sub-navigation bar */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-[#E4E4E7] shadow-xs">
+      <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-[#E4E4E7] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between text-xs font-medium">
           <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-2">
             <span className="font-bold text-violet-700 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
@@ -1072,7 +1127,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
       </section>
 
       {/* Plans Section */}
-      <section id="plans" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <section id="plans" className="scroll-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 items-stretch">
           {apiData.plans.map((plan) => {
             const isFeatured = plan.slug === 'growth';
@@ -1191,7 +1246,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
       </section>
 
       {/* Usage, Credits & Wallet Section */}
-      <section id="usage" className="bg-white border-y border-zinc-200 py-16">
+      <section id="usage" className="scroll-mt-32 bg-white border-y border-zinc-200 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
           <div className="max-w-2xl space-y-2">
             <h2 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Credits and wallet</h2>
@@ -1323,7 +1378,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
       {/* Interactive Bill Calculator Section */}
       <section 
         id="calculator" 
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 transition-all duration-500 rounded-3xl ${
+        className={`scroll-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 transition-all duration-500 rounded-3xl ${
           highlightedCalc ? 'ring-4 ring-violet-500 shadow-2xl bg-violet-50/20' : ''
         }`}
       >
@@ -1599,7 +1654,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
       </section>
 
       {/* Full Feature Comparison Table Section */}
-      <section id="compare" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section id="compare" className="scroll-mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="space-y-4 mb-8">
           <h2 className="text-3xl font-extrabold text-zinc-900 tracking-tight">Compare every feature</h2>
           <p className="text-sm text-zinc-600">
@@ -1664,11 +1719,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
                 </td>
               </tr>
               <tr className="border-b border-zinc-100 hover:bg-zinc-50/50">
-                <td className="py-3 px-5 font-medium text-zinc-800">Users</td>
+                <td className="py-3 px-5 font-medium text-zinc-800">Team Members</td>
                 <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('free')?.limits.users ?? 1}</td>
                 <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('starter')?.limits.users ?? 1}</td>
-                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">{getPlanBySlug('growth')?.limits.users ?? 4}</td>
-                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('pro')?.limits.users ?? 6}</td>
+                <td className="py-3 px-3 text-center text-zinc-800 font-semibold bg-violet-50/20">{getPlanBySlug('growth')?.limits.users ?? 2}</td>
+                <td className="py-3 px-3 text-center text-zinc-600">{getPlanBySlug('pro')?.limits.users ?? 4}</td>
                 <td className="py-3 px-3 text-center text-zinc-600">
                   {getPlanBySlug('enterprise')?.limits.users ? String(getPlanBySlug('enterprise')!.limits.users).charAt(0).toUpperCase() + String(getPlanBySlug('enterprise')!.limits.users).slice(1) : 'Unlimited'}
                 </td>
@@ -1696,7 +1751,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
                 <td className="py-3 px-5 font-medium text-zinc-800">Extra domain</td>
                 <td className="py-3 px-3 text-center text-zinc-400">—</td>
                 <td className="py-3 px-3 text-center text-zinc-700 font-medium">
-                  <AnimatedPrice value={currency === 'USD' ? '$5' : '₹300'} /> / mo
+                  <div className="leading-tight">
+                    <span className="block font-semibold text-zinc-800">₹300 / $5</span>
+                    <span className="text-[11px] text-zinc-500 font-normal">per month</span>
+                  </div>
                 </td>
                 <td className="py-3 px-3 text-center text-zinc-600 font-medium bg-violet-50/20">
                   same
