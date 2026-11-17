@@ -493,7 +493,20 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
   const [isLoadingApi, setIsLoadingApi] = useState<boolean>(false);
 
   // User Interactive State
-  const [billingInterval, setBillingInterval] = useState<BillingInterval>('monthly');
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const billingParam = params.get('billing')?.toLowerCase();
+        if (billingParam && ['monthly', 'quarterly', 'yearly'].includes(billingParam)) {
+          return billingParam as BillingInterval;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return 'monthly';
+  });
   const [selectedCalcPlan, setSelectedCalcPlan] = useState<CalcPlanId>(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -522,12 +535,26 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
     const handlePopState = () => {
       try {
         const params = new URLSearchParams(window.location.search);
+        
+        // 1. Sync Plan
         const planParam = params.get('plan')?.toLowerCase();
         if (planParam && validPlans.includes(planParam as PlanId)) {
           setSelectedPlan(planParam as PlanId);
           if (['free', 'starter', 'growth', 'pro'].includes(planParam)) {
             setSelectedCalcPlan(planParam as CalcPlanId);
           }
+        }
+
+        // 2. Sync Currency
+        const currParam = params.get('currency')?.toUpperCase();
+        if (currParam === 'USD' || currParam === 'INR') {
+          setCurrency(currParam as Currency);
+        }
+
+        // 3. Sync Billing Interval
+        const billingParam = params.get('billing')?.toLowerCase();
+        if (billingParam && ['monthly', 'quarterly', 'yearly'].includes(billingParam)) {
+          setBillingInterval(billingParam as BillingInterval);
         }
       } catch {
         // ignore
@@ -538,23 +565,45 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Handle plan selection and update URL query parameter ?plan=
+  // Helper to sync query parameters (?plan=...&currency=...&billing=...)
+  const updateUrlQueryParams = (updates: { plan?: PlanId; currency?: Currency; billing?: BillingInterval }) => {
+    try {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        const targetPlan = updates.plan !== undefined ? updates.plan : selectedPlan;
+        const targetCurrency = updates.currency !== undefined ? updates.currency : currency;
+        const targetBilling = updates.billing !== undefined ? updates.billing : billingInterval;
+
+        url.searchParams.set('plan', targetPlan);
+        url.searchParams.set('currency', targetCurrency);
+        url.searchParams.set('billing', targetBilling);
+
+        window.history.pushState({}, '', url.toString());
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  // Handle plan selection and update URL query parameters
   const handleSelectPlan = (planId: PlanId) => {
     setSelectedPlan(planId);
     if (['free', 'starter', 'growth', 'pro'].includes(planId)) {
       setSelectedCalcPlan(planId as CalcPlanId);
     }
-    try {
-      if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
-        if (url.searchParams.get('plan') !== planId) {
-          url.searchParams.set('plan', planId);
-          window.history.pushState({}, '', url.toString());
-        }
-      }
-    } catch {
-      // ignore
-    }
+    updateUrlQueryParams({ plan: planId, currency, billing: billingInterval });
+  };
+
+  // Handle currency selection and update URL query parameters
+  const handleSelectCurrency = (newCurrency: Currency) => {
+    setCurrency(newCurrency);
+    updateUrlQueryParams({ plan: selectedPlan, currency: newCurrency, billing: billingInterval });
+  };
+
+  // Handle billing interval selection and update URL query parameters
+  const handleSelectBilling = (newBilling: BillingInterval) => {
+    setBillingInterval(newBilling);
+    updateUrlQueryParams({ plan: selectedPlan, currency, billing: newBilling });
   };
 
   // Fetch Pricing Data from API: https://api.sit.onedigilta.in/api/pricing with full offline fallback
@@ -575,17 +624,29 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
               : null;
 
           if (data && data.plans && Array.isArray(data.plans)) {
-            // Apply team members: Growth = 2, Pro = 4
+            // Apply plan specifications: team members and sending domains
+            const freePlan = data.plans.find(p => p.slug === 'free');
+            if (freePlan) {
+              freePlan.limits.domains = 'Shared only';
+            }
+            const starterPlan = data.plans.find(p => p.slug === 'starter');
+            if (starterPlan) {
+              starterPlan.limits.domains = 1;
+            }
             const growthPlan = data.plans.find(p => p.slug === 'growth');
             if (growthPlan) {
               growthPlan.limits.users = 2;
+              growthPlan.limits.domains = 3;
             }
             const proPlan = data.plans.find(p => p.slug === 'pro');
             if (proPlan) {
               proPlan.limits.users = 4;
-              if (proPlan.limits.domains === 6 || (typeof proPlan.limits.domains === 'number' && proPlan.limits.domains < 10)) {
-                proPlan.limits.domains = 10;
-              }
+              proPlan.limits.domains = 10;
+            }
+            const enterprisePlan = data.plans.find(p => p.slug === 'enterprise');
+            if (enterprisePlan) {
+              enterprisePlan.limits.users = 'unlimited';
+              enterprisePlan.limits.domains = 'unlimited';
             }
 
             // Apply WhatsApp pricing for INR: Marketing 0.98 INR, Utility/Authentication/Service 0.15 INR
@@ -1001,7 +1062,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <div className="flex items-center p-0.5 bg-zinc-100 border border-zinc-200 rounded-lg text-[11px] font-semibold relative">
               <button
                 type="button"
-                onClick={() => setCurrency('USD')}
+                onClick={() => handleSelectCurrency('USD')}
                 className={`relative px-2 py-1 rounded-md transition-colors cursor-pointer ${
                   currency === 'USD' ? 'text-violet-700' : 'text-zinc-500 hover:text-zinc-800'
                 }`}
@@ -1017,7 +1078,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
               </button>
               <button
                 type="button"
-                onClick={() => setCurrency('INR')}
+                onClick={() => handleSelectCurrency('INR')}
                 className={`relative px-2 py-1 rounded-md transition-colors cursor-pointer ${
                   currency === 'INR' ? 'text-violet-700' : 'text-zinc-500 hover:text-zinc-800'
                 }`}
@@ -1068,7 +1129,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <button
               type="button"
               aria-pressed={currency === 'USD'}
-              onClick={() => setCurrency('USD')}
+              onClick={() => handleSelectCurrency('USD')}
               className={`relative px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 currency === 'USD' 
                   ? 'text-violet-700' 
@@ -1091,7 +1152,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <button
               type="button"
               aria-pressed={currency === 'INR'}
-              onClick={() => setCurrency('INR')}
+              onClick={() => handleSelectCurrency('INR')}
               className={`relative px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 currency === 'INR' 
                   ? 'text-violet-700' 
@@ -1122,7 +1183,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <button
               type="button"
               aria-pressed={billingInterval === 'monthly'}
-              onClick={() => setBillingInterval('monthly')}
+              onClick={() => handleSelectBilling('monthly')}
               className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer ${
                 billingInterval === 'monthly' 
                   ? 'text-zinc-900' 
@@ -1143,7 +1204,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <button
               type="button"
               aria-pressed={billingInterval === 'quarterly'}
-              onClick={() => setBillingInterval('quarterly')}
+              onClick={() => handleSelectBilling('quarterly')}
               className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 billingInterval === 'quarterly' 
                   ? 'text-zinc-900' 
@@ -1169,7 +1230,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
             <button
               type="button"
               aria-pressed={billingInterval === 'yearly'}
-              onClick={() => setBillingInterval('yearly')}
+              onClick={() => handleSelectBilling('yearly')}
               className={`relative px-3.5 sm:px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-1.5 ${
                 billingInterval === 'yearly' 
                   ? 'text-zinc-900' 
