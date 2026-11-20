@@ -1486,7 +1486,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onOpenModal }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200/60">
-                    {apiData.whatsapp_rate_card.filter(rate => rate.category != "WHATSAPP_INCLUDED_MESSAGES").map((rate) => {
+                    {apiData.whatsapp_rate_card.map((rate) => {
                       const label = rate.category.charAt(0).toUpperCase() + rate.category.slice(1);
                       const displayRate = currency === 'USD' 
                         ? `$${rate.rate_per_message}` 
